@@ -1,7 +1,23 @@
 ---
 title: "Week 1 Exercises"
-format: html
-editor: visual
+author: "Kaylynn Hiller"
+date: "2026-01-16"
+mainfont: "Georgia"
+format: 
+  html: 
+    theme: cosmo
+    toc: true
+    embed-resources: true
+  pdf:
+    colorlinks: true
+    includes:
+      in-header:
+    keep-tex: true
+header-includes:
+  \usepackage{tabularray}
+  \usepackage{siunitx}
+execute: 
+  echo: false
 ---
 
 ## Week 1
@@ -45,7 +61,7 @@ Exercise 1.2
 T <- 123
 
 # gave error "Error in TRUE <- 123 : invalid (do_set) left-hand side to assignment"
-TRUE <- 123
+#TRUE <- 123
 ```
 
 Exercise 1.3
