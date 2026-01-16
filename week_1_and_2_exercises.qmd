@@ -1,26 +1,36 @@
 ---
-title: "week_1_and_2_exercises"
+title: "Week 1 and 2 Exercises"
 format: html
 editor: visual
 ---
 
-## Quarto
+## #Identifies number of columns in dfWeek 1
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+Exercise 1.1
 
 ```{r}
-1 + 1
+
+#Identifies type of vector
+typeof(mtcars)
+
+#Identifies class
+class(mtcars)
+
+#Identifies number of rows (observations) in df
+nrow(mtcars)
+
+#Identifies number of columns in df
+ncol(mtcars)
+
+#Identifies number of columns in df
+length(mtcars)
+
+#Identifies number of rows and columns in df
+dim(mtcars)
+
+#Identifies row names in df
+rownames(mtcars)
+
+#Identifies column names in df
+colnames(mtcars)
 ```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).
