@@ -1,8 +1,8 @@
 ---
 title: "Quarto Document Template"
-author: "andrés castro araújo"
-date: "2023-09-07"
-mainfont: "Palatino"
+author: "Kaylynn Hiller"
+date: "2026-01-16"
+mainfont: "Georgia"
 format: 
   html: 
     theme: cosmo
@@ -64,9 +64,9 @@ superscript^2^ subscript~2~
 
 ## Images and Figures
 
-Quarto allows for [easy cross-references of images and plots](https://quarto.org/docs/authoring/cross-references.html#figures). @fig-cat shows an image, whereas @fig-plot shows a plot created using ggplot2.
+Quarto allows for [easy cross-references of images and plots](https://quarto.org/docs/authoring/cross-references.html#figures). @fig-dog shows an image, whereas @fig-plot shows a plot created using ggplot2.
 
-![This is a picture of cat. This cat appears to have mastery over the so-called "[Care Bear Stare](https://carebears.fandom.com/wiki/Care_Bear_Stare)."](images/cat.jpeg){#fig-cat fig-align="center" width="75%"}
+![This is a picture of my dogs enjoying the sun outside.](images/IMG_7135.jpeg){#fig-dog fig-align="center"}
 
 ```{r}
 #| label: fig-plot
@@ -91,10 +91,10 @@ To find more about the dataset used to create @fig-plot type the following line 
 
 ## Equations
 
-It's also easy to cross-reference equations. For example, @eq-1 depicts the *fundamental theorem of calculus.*
+It's also easy to cross-reference equations. For example, @eq-1 depicts a *normal distribution.*
 
 $$
-f(b) - f(a) = \int_a^b f^\prime (x) dx
+f(x) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}
 $$ {#eq-1}
 
 ## Tables
@@ -144,7 +144,7 @@ class(mtcars)
 
 Finally, Quarto has great Zotero integration.
 
-> Hi! My name is Andrés. One of my favorite academic books is @abbott1988. @ferguson2022 is the last thing I read. The next thing I plan on reading is Paul Smaldino's *Modeling Social Behavior* [-@smaldino2023] book.
+> Hi! My name is Andrés. One of my favorite academic articles is [@advocati]. [@declercq] is a recent article I read. The next thing I plan on reading is this article [@elwyn].
 
 ## References
 
