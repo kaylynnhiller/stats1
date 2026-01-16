@@ -1,5 +1,5 @@
 ---
-title: "Week 1 and 2 Exercises"
+title: "Week 1 Exercises"
 format: html
 editor: visual
 ---
