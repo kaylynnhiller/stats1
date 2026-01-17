@@ -28,49 +28,54 @@ library(nycflights13)
 library(tidyverse)
 ```
 
-Exercise 3.2.5
+**Exercise 3.2.5**
 
-1. In a single pipeline for each condition, find all flights that meet the condition:
+1.  In a single pipeline for each condition, find all flights that meet the condition:
 
-- Had an arrival delay of two or more hours
+-   Had an arrival delay of two or more hours
 
 ```{r}
 flights |> 
   filter(arr_delay >= 120)
 ```
 
-- Flew to Houston (`IAH` or `HOU`)
+-   Flew to Houston (`IAH` or `HOU`)
+
 ```{r}
 flights |> 
   filter(dest == "IAH" | dest == "HOU")
 ```
 
-- Were operated by United, American, or Delta
+-   Were operated by United, American, or Delta
+
 ```{r}
 flights |> 
   filter(carrier %in% c("UA", "AA", "DL"))
 ```
 
-- Departed in summer (July, August, and September)
+-   Departed in summer (July, August, and September)
+
 ```{r}
 flights |> 
   filter(month %in% 7:9)
 ```
 
-- Arrived more than two hours late but didn’t leave late
+-   Arrived more than two hours late but didn’t leave late
+
 ```{r}
 flights |> 
   filter(arr_delay > 120 & dep_delay <= 0)
 ```
 
-- Were delayed by at least an hour, but made up over 30 minutes in flight
+-   Were delayed by at least an hour, but made up over 30 minutes in flight
 
 ```{r}
 flights |> 
   filter(dep_delay >= 60 & dep_delay - arr_delay > 30)
 ```
 
-2. Sort flights to find the flights with the longest departure delays. Find the flights that left earliest in the morning.
+2.  Sort flights to find the flights with the longest departure delays. Find the flights that left earliest in the morning.
+
 ```{r}
 flights |> 
   arrange(desc(dep_delay))
@@ -79,7 +84,8 @@ flights |>
   arrange(dep_time)
 ```
 
-3. Sort flights to find the fastest flights. (Hint: Try including a math calculation inside of your function.)
+3.  Sort flights to find the fastest flights. (Hint: Try including a math calculation inside of your function.)
+
 ```{r}
 to_kmh <- function(distance, minutes) {
   (distance * 1.60934) / (minutes / 60)
@@ -91,14 +97,16 @@ flights |>
   arrange(desc(speed))
 ```
 
-4. Was there a flight on every day of 2013? Yes
+4.  Was there a flight on every day of 2013? Yes
+
 ```{r}
 flights |> 
   distinct(month, day) |> 
   summarize(num_days = n())
 ```
 
-5. Which flights traveled the farthest distance? Which traveled the least distance?
+5.  Which flights traveled the farthest distance? Which traveled the least distance?
+
 ```{r}
 flights |> 
   arrange(desc(distance))
@@ -107,19 +115,80 @@ flights |>
   arrange(distance)
 ```
 
-6. Does it matter what order you used filter() and arrange() if you’re using both? Why/why not? Think about the results and how much work the functions would have to do.
+6.  Does it matter what order you used filter() and arrange() if you’re using both? Why/why not? Think about the results and how much work the functions would have to do.
 
 It does not matter. Filter pulls out rows that meet a condition but does not change the ordering. Arrange changes the ordering but leaves all rows in. Since they perform separate functions, the order does not matter.
 
-Exercise 3.3.5
+**Exercise 3.3.5**
+
+1.  Compare dep_time, sched_dep_time, and dep_delay. How would you expect those three numbers to be related?
+
+    I would expect the scheduled departure time (sched_dep_time) plus the delay (dep_delay) to equal the actual departure time (dep_time).
+
+```{r}
+flights |>
+  select(dep_time, sched_dep_time, dep_delay)
+```
+
+2.  Brainstorm as many ways as possible to select dep_time, dep_delay, arr_time, and arr_delay from flights.
+```{r}
+flights
+
+flights |>
+  select(dep_time, dep_delay, arr_time, arr_delay)
+
+flights |>
+  select(dep_time:arr_delay)
+
+flights |>
+  select(!year:day & !sched_dep_time & !sched_arr_time &!carrier:time_hour)
+
+flights |> 
+  select(starts_with("dep_"), starts_with("arr_"))
+```
+
+3.  What happens if you specify the name of the same variable multiple times in a select() call?
+```{r}
+flights|>
+  select(year, year)
+```
+You just get the variable once.
+
+4.  What does the any_of() function do? Why might it be helpful in conjunction with this vector?
+```{r}
+variables <- c("year", "month", "day", "dep_delay", "arr_delay")
+flights|>
+  select(any_of(variables))
+```
+The any_of() function in conjuction with the select function selects any variables listed. If you set specific variables to select outside the pipeline, the code is cleaner and easier to change.
+
+5.  Does the result of running the following code surprise you? How do the select helpers deal with upper and lower case by default? How can you change that default?
+```{r}
+flights |> select(contains("TIME"))
+```
+The result did not surprise me. By default, select helpers treat upper and lower case the same. You can change this by specifying with ignore.case = FALSE.
+
+6.  Rename air_time to air_time_min to indicate units of measurement and move it to the beginning of the data frame.
+```{r}
+flights |>
+  relocate(air_time_min = air_time)
+```
+
+7.  Why doesn’t the following work, and what does the error mean?
+```{r}
+flights |> 
+  select(tailnum) |> 
+  arrange(arr_delay)
+#> Error in `arrange()`:
+#> ℹ In argument: `..1 = arr_delay`.
+#> Caused by error:
+#> ! object 'arr_delay' not found
+```
+
+We did not select that variable in the select function so it is not available to arrange.
+
+**Exercise 3.5.7**
 
 ```{r}
 
 ```
-
-Exercise 3.5.7
-
-```{r}
-
-```
-
