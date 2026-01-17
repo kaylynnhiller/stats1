@@ -1,26 +1,125 @@
 ---
 title: "Week 2 Exercises"
-format: html
-editor: visual
+author: "Kaylynn Hiller"
+date: "2026-01-16"
+mainfont: "Georgia"
+format: 
+  html: 
+    theme: cosmo
+    toc: true
+    embed-resources: true
+  pdf:
+    colorlinks: true
+    includes:
+      in-header:
+    keep-tex: true
+header-includes:
+  \usepackage{tabularray}
+  \usepackage{siunitx}
+execute: 
+  echo: false
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Week 2
 
 ```{r}
-1 + 1
+
+library(nycflights13)
+library(tidyverse)
 ```
 
-You can add options to executable code like this
+Exercise 3.2.5
+
+1. In a single pipeline for each condition, find all flights that meet the condition:
+
+- Had an arrival delay of two or more hours
 
 ```{r}
-#| echo: false
-2 * 2
+flights |> 
+  filter(arr_delay >= 120)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+- Flew to Houston (`IAH` or `HOU`)
+```{r}
+flights |> 
+  filter(dest == "IAH" | dest == "HOU")
+```
+
+- Were operated by United, American, or Delta
+```{r}
+flights |> 
+  filter(carrier %in% c("UA", "AA", "DL"))
+```
+
+- Departed in summer (July, August, and September)
+```{r}
+flights |> 
+  filter(month %in% 7:9)
+```
+
+- Arrived more than two hours late but didn’t leave late
+```{r}
+flights |> 
+  filter(arr_delay > 120 & dep_delay <= 0)
+```
+
+- Were delayed by at least an hour, but made up over 30 minutes in flight
+
+```{r}
+flights |> 
+  filter(dep_delay >= 60 & dep_delay - arr_delay > 30)
+```
+
+2. Sort flights to find the flights with the longest departure delays. Find the flights that left earliest in the morning.
+```{r}
+flights |> 
+  arrange(desc(dep_delay))
+
+flights |> 
+  arrange(dep_time)
+```
+
+3. Sort flights to find the fastest flights. (Hint: Try including a math calculation inside of your function.)
+```{r}
+to_kmh <- function(distance, minutes) {
+  (distance * 1.60934) / (minutes / 60)
+}
+
+flights |> 
+  mutate(speed = to_kmh(distance, air_time)) |>
+  relocate(speed) |> 
+  arrange(desc(speed))
+```
+
+4. Was there a flight on every day of 2013? Yes
+```{r}
+flights |> 
+  distinct(month, day) |> 
+  summarize(num_days = n())
+```
+
+5. Which flights traveled the farthest distance? Which traveled the least distance?
+```{r}
+flights |> 
+  arrange(desc(distance))
+
+flights |> 
+  arrange(distance)
+```
+
+6. Does it matter what order you used filter() and arrange() if you’re using both? Why/why not? Think about the results and how much work the functions would have to do.
+
+It does not matter. Filter pulls out rows that meet a condition but does not change the ordering. Arrange changes the ordering but leaves all rows in. Since they perform separate functions, the order does not matter.
+
+Exercise 3.3.5
+
+```{r}
+
+```
+
+Exercise 3.5.7
+
+```{r}
+
+```
+
