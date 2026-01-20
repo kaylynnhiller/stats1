@@ -1,7 +1,7 @@
 ---
 title: "Week 2 Exercises"
 author: "Kaylynn Hiller"
-date: "2026-01-16"
+date: "2026-01-20"
 mainfont: "Georgia"
 format: 
   html: 
@@ -117,13 +117,13 @@ flights |>
 
 6.  Does it matter what order you used filter() and arrange() if you’re using both? Why/why not? Think about the results and how much work the functions would have to do.
 
-It does not matter. Filter pulls out rows that meet a condition but does not change the ordering. Arrange changes the ordering but leaves all rows in. Since they perform separate functions, the order does not matter.
+It does not matter. Filter pulls out rows that meet a condition but does not change the ordering. Arrange changes the ordering but leaves all rows in. Since they perform separate actions, the order does not matter.
 
 **Exercise 3.3.5**
 
 1.  Compare dep_time, sched_dep_time, and dep_delay. How would you expect those three numbers to be related?
 
-    I would expect the scheduled departure time (sched_dep_time) plus the delay (dep_delay) to equal the actual departure time (dep_time).
+I would expect the scheduled departure time (sched_dep_time) plus the delay (dep_delay) to equal the actual departure time (dep_time).
 
 ```{r}
 flights |>
@@ -176,19 +176,143 @@ flights |>
 
 7.  Why doesn’t the following work, and what does the error mean?
 ```{r}
-flights |> 
-  select(tailnum) |> 
-  arrange(arr_delay)
+#flights |> 
+  #select(tailnum) |> 
+  #arrange(arr_delay)
 #> Error in `arrange()`:
 #> ℹ In argument: `..1 = arr_delay`.
 #> Caused by error:
 #> ! object 'arr_delay' not found
 ```
 
-We did not select that variable in the select function so it is not available to arrange.
+We did not select arr_delay in the select function so it is not available to arrange. Select keeps only the columns listed.
 
 **Exercise 3.5.7**
 
+1. Which carrier has the worst average delays? Challenge: can you disentangle the effects of bad airports vs. bad carriers? Why/why not? (Hint: think about...)
 ```{r}
+flights |> 
+  group_by(carrier) |> 
+  summarize(avg_dep_del = mean(dep_delay, na.rm = TRUE)) |> 
+  arrange(desc(avg_dep_del))
+
+flights |> 
+  filter(carrier == "F9") |> 
+  count(carrier, dest, origin) 
+
+flights |> 
+  count(carrier, dest) |> 
+  filter(dest == "DEN")
+
+flights |> 
+  group_by(carrier, dest, origin) |> 
+  summarize(n = n(), avg_dd = mean(dep_delay, na.rm = TRUE)) |> 
+  filter(dest == "DEN" | carrier == "F9") |> 
+  arrange(avg_dd)
+```
+The carrier with the worst average delays is Frontier airlines. However, they are headquartered in Denver and this data set only includes flights from LGA to DEN. This means there’s no variance in F9 across airports since there is only one flight path being recorded. We cannot disentangle the effects of bad airports from this data set and would have to make a lot of assumptions in order to do so.
+
+2. Find the flights that are most delayed upon departure to each destination.
+```{r}
+flights |>
+  group_by(dest) |>
+  slice_max(dep_delay) |>
+  relocate(dest, carrier, dep_delay) |> 
+  arrange(desc(dep_delay))
+```
+
+
+3. How do delays vary over the course of the day? Illustrate your answer with a plot.
+```{r}
+flights |> 
+  group_by(hour) |> 
+  filter(!is.na(dep_delay)) |> 
+  summarize(
+    avg = mean(dep_delay)) |> 
+  ggplot(aes(hour, avg)) + 
+  geom_point(color = "steelblue") +
+  labs(title = "Average Departure Delays Over a 24 Hour Period", subtitle = "Using US Bureau of Transportation Statistics Data on Flights Departing from NYC in 2013", x = "Hour of Day", y = "Average Departure Delay in Minutes")
 
 ```
+Delays do vary.
+
+4. What happens if you supply a negative n to slice_min() and friends?
+```{r}
+flights |> 
+  slice_min(dep_delay, n = -1)
+
+flights |> 
+  arrange(dep_delay)
+```
+The result is listing the rows based on the smallest to largest dep_delay value. This result is the same as arranging the values by dep_delay.
+
+5. Explain what count() does in terms of the dplyr verbs you just learned. What does the sort argument to count() do?
+```{r}
+flights |> 
+  count(origin)
+
+flights |> 
+  count(origin, sort = TRUE)
+```
+Count allows you to count the unique values of one or more variables similar to group_by and summarise. The sort options causes the results to be presented in descending order.
+
+6. Suppose we have the following tiny data frame:
+
+```{r}
+df <- tibble(
+  x = 1:5,
+  y = c("a", "b", "a", "a", "b"),
+  z = c("K", "K", "L", "L", "K")
+)
+```
+
+a. Write down what you think the output will look like, then check if you were correct, and describe what group_by() does.
+```{r}
+df |>
+  group_by(y)
+```
+This command should group by the two groups in y.
+
+b. Write down what you think the output will look like, then check if you were correct, and describe what arrange() does. Also, comment on how it’s different from the group_by() in part (a).
+```{r}
+df |>
+  arrange(y)
+```
+This command should arrange the results by the y column alphabetically. This means it should be list the results as a,a,a,b,b. The row order changed in using arrange() and not group_by().
+
+c. Write down what you think the output will look like, then check if you were correct, and describe what the pipeline does.
+```{r}
+df |>
+  group_by(y) |>
+  summarize(mean_x = mean(x))
+```
+The result should be a summary of the mean of x based on the two groups of y. The pipeline passes the group_by() function along into the summarize() function so the means are groups by y values.
+
+d. Write down what you think the output will look like, then check if you were correct, and describe what the pipeline does. Then, comment on what the message says.
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x))
+```
+The result should be a summary of the mean of x based on the three groups of y and z (a K, a L, a K). This pipeline passes the group_by() function along into the summarize() function so the means are groups by y and z values. The message means that the results are grouped by y values first and the grouping can be overriden using the .groups argument.
+
+e. Write down what you think the output will look like, then check if you were correct, and describe what the pipeline does. How is the output different from the one in part (d)?
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x), .groups = "drop")
+```
+The answer should be the same except the results are not grouped.
+
+f. Write down what you think the outputs will look like, then check if you were correct, and describe what each pipeline does. How are the outputs of the two pipelines different?
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x))
+
+df |>
+  group_by(y, z) |>
+  mutate(mean_x = mean(x))
+```
+The first pipeline calculated the means for the three combinations of the y and z column values. The second pipeline creates a new column where these means are stored. The output of the first pipeline is three rows and five rows for the second.
+
