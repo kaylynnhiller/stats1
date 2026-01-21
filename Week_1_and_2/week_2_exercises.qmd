@@ -185,7 +185,7 @@ flights |>
 #> ! object 'arr_delay' not found
 ```
 
-We did not select arr_delay in the select function so it is not available to arrange. Select keeps only the columns listed.
+We did not select the arr_delay variable in the select function so it is not available to arrange. Select keeps only the columns listed.
 
 **Exercise 3.5.7**
 
@@ -254,7 +254,7 @@ flights |>
 flights |> 
   count(origin, sort = TRUE)
 ```
-Count allows you to count the unique values of one or more variables similar to group_by and summarise. The sort options causes the results to be presented in descending order.
+Count allows you to count the unique values of one or more variables similar to group_by and summarize. The sort options causes the results to be presented in descending order.
 
 6. Suppose we have the following tiny data frame:
 

@@ -156,7 +156,7 @@
 
 \title{Week 2 Exercises}
 \author{Kaylynn Hiller}
-\date{2026-01-16}
+\date{2026-01-20}
 
 \begin{document}
 \maketitle
@@ -498,20 +498,20 @@ i Use the conflicted package (<http://conflicted.r-lib.org/>) to force all confl
 
 It does not matter. Filter pulls out rows that meet a condition but does
 not change the ordering. Arrange changes the ordering but leaves all
-rows in. Since they perform separate functions, the order does not
-matter.
+rows in. Since they perform separate actions, the order does not matter.
 
 \textbf{Exercise 3.3.5}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
+\tightlist
 \item
   Compare dep\_time, sched\_dep\_time, and dep\_delay. How would you
   expect those three numbers to be related?
-
-  I would expect the scheduled departure time (sched\_dep\_time) plus
-  the delay (dep\_delay) to equal the actual departure time (dep\_time).
 \end{enumerate}
+
+I would expect the scheduled departure time (sched\_dep\_time) plus the
+delay (dep\_delay) to equal the actual departure time (dep\_time).
 
 \begin{verbatim}
 # A tibble: 336,776 x 3
@@ -753,8 +753,8 @@ ignore.case = FALSE.
   Why doesn't the following work, and what does the error mean?
 \end{enumerate}
 
-We did not select that variable in the select function so it is not
-available to arrange.
+We did not select the arr\_delay variable in the select function so it
+is not available to arrange. Select keeps only the columns listed.
 
 \textbf{Exercise 3.5.7}
 
@@ -875,6 +875,8 @@ have to make a lot of assumptions in order to do so.
 
 \pandocbounded{\includegraphics[keepaspectratio]{week_2_exercises_files/figure-pdf/unnamed-chunk-21-1.pdf}}
 
+Delays do vary.
+
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \setcounter{enumi}{3}
@@ -955,7 +957,7 @@ dep\_delay.
 \end{verbatim}
 
 Count allows you to count the unique values of one or more variables
-similar to group\_by and summarise. The sort options causes the results
+similar to group\_by and summarize. The sort options causes the results
 to be presented in descending order.
 
 \begin{enumerate}
@@ -1124,10 +1126,10 @@ argument.
 5     5 b     K        3.5
 \end{verbatim}
 
-The first function calculated the means for the three combinations of
-the y and z column values. The second function creates a new column
-where these means are stored. The output of the first function is three
-rows and five rows for the second function.
+The first pipeline calculated the means for the three combinations of
+the y and z column values. The second pipeline creates a new column
+where these means are stored. The output of the first pipeline is three
+rows and five rows for the second.
 
 
 
