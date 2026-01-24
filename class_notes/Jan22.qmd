@@ -1,0 +1,187 @@
+---
+title: "Jan22 Notes"
+format: html
+editor: visual
+---
+
+Load packages
+
+```{r}
+library(gssr)
+library(gssrdoc)
+library(tidyverse)
+library(broom)
+```
+
+Get data from NORC one time.
+
+```{r}
+#| eval: false
+gss2024 <- gss_get_yr(2024)
+```
+
+Save it to my hard drive one time.
+
+```{r}
+#| eval: false
+saveRDS(gss2024, file = here::here("data", "gss2024.rds"))
+```
+
+For the future, lod my saved data.
+
+```{r}
+gss2024 <- readRDS(file = here::here("data", "gss2024.RDS"))
+```
+
+Working data.
+
+```{r}
+d <- gss2024 |>
+  select(polviews, sex) |>
+  drop_na() |> #if any rows contain missing data, get rid of them
+  haven::zap_labels() #removes value labels
+
+#View(d)
+#glimps(d)
+
+#?polviews #pulls up help files
+#glimpse(gss2024)
+#View(gss2024[1:10, 1:10])
+```
+
+Getting R to estimate "model C" (zero parameter guess)
+
+```{r}
+d <- d |>
+  mutate(mod_c_pred = 4,
+         mod_c_err = polviews - mod_c_pred)
+view(d)
+
+sse_c <- sum(d$mod_c_err^2) #sum of squared errors for model c
+sse_c
+
+#d$mod_c_pred <- 4 #does the same thing
+```
+
+Getting R to estimate "model A" (one parameter guess)
+
+```{r}
+d <- d |>
+  mutate(mod_a_pred = mean(polviews),
+         mod_a_err = polviews - mod_a_pred)
+
+sse_a <- sum(d$mod_a_err^2) #sum of squared errors for model a
+sse_a
+```
+
+Estimate PRE
+
+```{r}
+(sse_c - sse_a) / sse_c
+```
+
+
+Getting model C with lm(). FIrst let's make a version of polviews "centered" on 4.
+
+```{r}
+d <- d |>
+  mutate(polviews_dev = polviews - 4)
+```
+
+Now we can do it.
+
+```{r}
+#no intercept
+mod_c <- lm(polviews_dev ~ 0, 
+            data = d)
+
+summary(mod_c)
+
+deviance(mod_c) #confirm this is the same as above
+```
+
+Now model A
+
+```{r}
+#function of an intercept (intercept is multiplied by 1)
+mod_a <- lm(polviews_dev ~ 1,
+            data = d)
+
+deviance(mod_a)
+
+(deviance(mod_c) - deviance(mod_a)) / deviance(mod_c)
+```
+
+How would I add a prediction to the dataframe?
+
+```{r}
+d$mod_a_pred <- predict(mod_a) #makes a column with predictions using model A
+d$mod_c_pred <- predict(mod_c)
+```
+
+```{r}
+glance(mod_a) #sigma is RMSE
+summary(mod_a) #residual standard error is RMSE
+```
+
+Let's look at this first.
+
+```{r}
+d2 <- d |>
+  group_by(sex) |>
+  summarize(mean_pv = mean(polviews))
+
+d2
+#?sex
+```
+
+Let's start with the bad way of conditional predictions. Does not make sense to code sex as 1 and 2.
+
+```{r}
+model3 <- lm(polviews ~ 1 + sex,
+             data = d)
+```
+
+First good way is to make a new variable with a meaningful zero.
+
+```{r}
+d <- d |>
+  mutate(male = if_else(sex == 1 , 1, 0))
+
+model3 <- lm(polviews ~ 1 + male,
+             data = d)
+
+tidy(model3)
+```
+
+Another good way is using the factor wrapper
+
+```{r}
+model3 <- lm(polviews ~ 1 +factor(sex),
+             data = d)
+tidy(model3)
+```
+
+A good way especially for plotting is to have a `chr` version.
+
+```{r}
+d <- d |>
+  mutate(sex_chr = if_else(sex == 1, "Male", "Female"))
+
+model3 <- lm(polviews ~ 1 + sex_chr,
+             data = d)
+
+tidy(model3)
+```
+
+Compare 1 parameter and 2 parameter models
+
+```{r}
+deviance(mod_a) #just b0
+deviance(model3) #b0 and b1
+
+(deviance(mod_a) - deviance(model3))/deviance(mod_a)
+
+glance(model3) #r squared is proportional reduction in error compared to 1 parameter model
+```
+
