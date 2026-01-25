@@ -1,0 +1,220 @@
+---
+title: "Chapter 3 homework"
+format: html
+embed-resources: true
+execute:
+  echo: true
+  message: false
+  warning: false
+---
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(here)
+library(broom)
+```
+
+The course datasets live in your project’s `data/` folder. Use `here::here()` so file paths work regardless of where you render from.
+
+```{r}
+fitness <- readr::read_csv(here::here("data", "fitness.csv"))
+```
+
+---
+
+## 1. Is this a “normal” group (resting pulse)?
+
+The dataset `fitness.csv` contains (among other variables) resting pulse rate (`RSTPULSE`) for a sample of men. A commonly cited “normal” resting pulse rate for men is 72. We want to assess whether this sample looks consistent with that reference value.
+
+### (a) Specify MODEL C, MODEL A, and the null hypothesis
+
+Write both a verbal description and a mathematical statement.
+
+- **MODEL C (compact):** predicts the reference value for every case  
+  $$\text{RSTPULSE}_i = 72 + \varepsilon_i$$
+
+- **MODEL A (augmented):** estimates the sample mean (one-parameter model)  
+  $$\text{RSTPULSE}_i = b_0 + \varepsilon_i$$
+
+- **Null hypothesis:** $H_0: b_0 = 72$ (equivalently, the population mean resting pulse equals 72)
+
+### (b) Estimate both models with `lm()`
+
+A convenient way to fit these with `lm()` is to *re-express* the outcome as a deviation from the null value.
+
+Let $Y_i = \text{RSTPULSE}_i - 72$. Then:
+
+- MODEL C becomes $Y_i = 0 + \varepsilon_i$ (0 parameters)
+- MODEL A becomes $Y_i = b_0 + \varepsilon_i$ (1 parameter)
+
+```{r}
+fitness <- fitness |>
+  mutate(rst_dev = RSTPULSE - 72)
+
+model_c <- lm(rst_dev ~ 0, data = fitness)
+model_a <- lm(rst_dev ~ 1, data = fitness)
+
+summary(model_c)
+summary(model_a)
+
+broom::tidy(model_a)
+broom::glance(model_a)
+```
+
+### (c) Calculate PRE
+
+Use:
+
+$$\text{PRE} = \frac{\text{SSE}_C - \text{SSE}_A}{\text{SSE}_C}$$
+
+For `lm` objects, you can get SSE (a.k.a. RSS) with `deviance()`.
+
+```{r}
+sse_c <- deviance(model_c)
+sse_a <- deviance(model_a)
+
+pre <- (sse_c - sse_a) / sse_c
+pre
+```
+
+### (d) Write a tentative summary
+
+In a short paragraph, summarize what you found and what it suggests substantively. (We are not doing a formal test yet—use your judgment.)
+
+---
+
+## 2. Did running increase pulse rate?
+
+Use the same dataset to assess whether running increased pulse rate. The variable `RUNPULSE` is post-run pulse rate.
+
+Tip: Create a new variable that captures the *change* in pulse rate.
+
+### (a) Specify MODEL C, MODEL A, and the null hypothesis
+
+Let $\Delta_i = \text{RUNPULSE}_i - \text{RSTPULSE}_i$.
+
+- **MODEL C (compact):** no average increase  
+  $$\Delta_i = 0 + \varepsilon_i$$
+
+- **MODEL A (augmented):** estimate the average increase  
+  $$\Delta_i = b_0 + \varepsilon_i$$
+
+- **Null hypothesis:** $H_0: b_0 = 0$
+
+### (b) Estimate both models with `lm()`
+
+```{r}
+fitness <- fitness |>
+  mutate(pulse_change = RUNPULSE - RSTPULSE)
+
+model_c <- lm(pulse_change ~ 0, data = fitness)
+model_a <- lm(pulse_change ~ 1, data = fitness)
+
+summary(model_c)
+summary(model_a)
+
+broom::tidy(model_a)
+broom::glance(model_a)
+```
+
+### (c) Calculate PRE
+
+```{r}
+sse_c <- deviance(model_c)
+sse_a <- deviance(model_a)
+
+pre <- (sse_c - sse_a) / sse_c
+pre
+```
+
+### (d) Write a tentative summary
+
+In a short paragraph, summarize what you found and what it suggests substantively.
+
+---
+
+## 3. Conceptual practice: write models and hypotheses
+
+For each prompt below:
+
+1. Specify MODEL C, MODEL A, and the null hypothesis.
+2. State the number of parameters in MODEL C and MODEL A.
+3. State the number of **unused-but-potential parameters** in MODEL A (degrees of freedom), using the course definition.
+
+Do **not** write your models generically as “$Y = \dots$”. Use the named dependent variable (e.g., “IQ”, “PTSD score”, etc.). If a prompt implies a *constructed variable*, define it.
+
+### (a) IQ
+
+IQ tests are designed to have mean 100 and standard deviation 15. You give 6 friends an online IQ test. Are your friends smarter than average?
+
+### (b) PTSD
+
+The army uses a PTSD test; scores above 37 indicate clinical levels of PTSD. A troop of 43 soldiers is tested at the end of deployment. Are these soldiers, on average, suffering from PTSD?
+
+### (c) Chipotle sales
+
+Chipotle wants to know whether sales have rebounded after an E. coli scare. They have sales in 200 markets *before* the scare and *now*. They compute a difference score. Are sales depressed?
+
+---
+
+## 4. With your own data
+
+Please choose a variable from the 2024 General Social Survey. Remember to use `drop_na()` in your pipeline to get rid of missing data.
+
+### (a) Describe your dataset
+
+Include enough detail that someone else can understand what you have.
+
+- **(a.1)** What are the units of analysis and how many are there?
+- **(a.2)** What is the dependent variable ($Y$)? How is it measured? What does its distribution look like? (A histogram and/or descriptives are fine.)
+
+```{r}
+# If you have data loaded, you can start with something like:
+# your_data |>
+#   summarize(
+#     n = n(),
+#     mean_y = mean(Y, na.rm = TRUE),
+#     sd_y = sd(Y, na.rm = TRUE)
+#   )
+```
+
+### (b) Propose a one-parameter question
+
+Think of a question that can be tested with a MODEL C with **0 parameters** and a MODEL A that uses **1 parameter** to estimate central tendency. Write the research question in plain language.
+
+### (c) Specify MODEL A, MODEL C, and the null hypothesis
+
+Write both a verbal description and a mathematical statement (use $\varepsilon_i$ for error).
+
+### (d) Estimate both models with `lm()`
+
+```{r}
+# Replace Y with your dependent variable and adapt as needed.
+# If your null value is mu0, you can use the same deviation trick as in Question 1:
+#
+# your_data <- your_data |>
+#   mutate(y_dev = Y - mu0)
+#
+# model_c <- lm(y_dev ~ 0, data = your_data)
+# model_a <- lm(y_dev ~ 1, data = your_data)
+#
+# summary(model_c)
+# summary(model_a)
+```
+
+### (e) Calculate PRE
+
+```{r}
+# sse_c <- deviance(model_c)
+# sse_a <- deviance(model_a)
+# pre <- (sse_c - sse_a) / sse_c
+# pre
+```
+
+---
+
+## Submission
+
+Render this document to **PDF** and submit the PDF with your code and output.

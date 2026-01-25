@@ -1,0 +1,327 @@
+---
+title: "Chapter 2 homework"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+embed-resources: true
+execute:
+  echo: true
+  message: false
+  warning: false
+---
+
+## Setup
+
+Assume you are working in an RStudio Project. Use `here::here("data", "filename.csv")` to build file paths to datasets in the `data` folder.
+
+```{r}
+library(tidyverse)
+library(here)
+library(psych)   # used for describe()/describeBy() in a few places
+```
+
+```{r}
+heart <- read_csv(here::here("data", "heart.csv"))
+```
+
+::: callout-tip
+If you ever get a “file not found” error, confirm (1) you opened the correct `.Rproj`, and (2) the dataset is inside your project’s data folder (accessed via `here::here("data", ...)`).
+:::
+
+## Tutorial (Chapter 2, plus a bit of 3)
+
+### 1) Estimates of variation around the mean
+
+In class, we talked about quantifying variation. Variance and standard deviation are both based on the **sum of squared error (SSE)** around a model’s predictions.
+
+Start by computing the sample standard deviation and sample variance of height:
+
+```{r}
+# Compute sd and variance of height
+```
+
+#### Convert variance to standard deviation
+
+Recall: $\text{SD} = \sqrt{\text{Var}}$.
+
+```{r}
+# Convert variance to SD using R as a calculator
+```
+
+#### Compute SSE from the variance and sample size
+
+For the *sample* variance,
+$$
+s^2 = \frac{\text{SSE}}{n-1}
+\quad\Rightarrow\quad
+\text{SSE} = s^2 (n-1).
+$$
+
+```{r}
+# Compute n, variance, and then SSE = var * (n - 1)
+```
+
+::: callout-tip
+In R, `var(x)` uses the sample variance with denominator $n-1$. That’s why the formula above uses $n-1$.
+:::
+
+### 2) Estimates of central tendency
+
+Compute mean and median:
+
+```{r}
+# Mean and median of height
+```
+
+#### Mode (custom helper)
+
+R’s base `mode()` is **not** the statistical mode. Below is a simple helper that returns the most frequent value(s). If the data are multimodal, it returns the average of the modes.
+
+```{r}
+mymode <- function(x) {
+  x2 <- na.omit(x)
+  ux <- unique(x2)
+  tab <- tabulate(match(x2, ux))
+  mean(ux[tab == max(tab)])
+}
+```
+
+```{r}
+# Use mymode() to compute the mode of height
+```
+
+### 3) Group and summarize a dataset
+
+Compute mean and SD of height by gender using tidyverse verbs:
+
+```{r}
+# Summarize Height by Gender:
+# - n
+# - mean height
+# - sd height
+```
+
+If you want a richer descriptive table, `psych::describeBy()` can do that:
+
+```{r}
+# describeBy(heart$Height, heart$Gender, mat = TRUE)
+```
+
+::: callout-tip
+Even when you use a helper like `describeBy()`, prefer doing **wrangling** (filtering, selecting, mutating, grouping) with tidyverse verbs first, then pass the result to the summary function.
+:::
+
+### 4) Estimates of variation revisited: SSE from the data
+
+One way to compute SSE around the **mean model** (predict $\bar{Y}$ for everyone):
+
+```{r}
+# Compute SSE around the mean
+```
+
+Now modify that idea to compute SSE around the **median model** (predict $\tilde{Y}$ for everyone).
+
+```{r}
+# Compute SSE around the median
+```
+
+Answer in words: is SSE around the median larger or smaller than SSE around the mean for these data?
+
+### 5) Missing data
+
+Many functions accept `na.rm = TRUE` to ignore missing values.
+
+```{r}
+# Example: mean height ignoring missing values
+```
+
+You can also drop missing values explicitly:
+
+```{r}
+# heart |> drop_na(Height) |> summarize(mean_height = mean(Height))
+```
+
+## HW 02 Questions
+
+### 1) Central tendency and variability (USNEWS)
+
+The dataset `USNEWS.csv` contains data used by *U.S. News and World Report* to make its college rankings. Two variables of interest are:
+
+- `gradRate`: graduation rate (percent from 0 to 100)
+- `accptRate`: acceptance rate (proportion from 0 to 1)
+
+For each variable, obtain estimates of central tendency (mean, median, mode) and variability (variance and standard deviation). Write a few sentences describing what you found.
+
+```{r}
+usnews <- read_csv(here::here("data", "USNEWS.csv"))
+```
+
+```{r}
+# Create a compact summary table for gradRate and accptRate:
+# mean, median, mode, variance, sd, and n (non-missing)
+```
+
+### 2) Conditional vs unconditional predictions (USNEWS)
+
+Another interesting variable is `Type` (public vs private).
+
+1. Write **Model C** that makes a constant prediction for every school.
+2. Write **Model A** that makes predictions of `gradRate` conditional on `Type`.
+3. As a first look at whether Model A might be useful, compute the mean `gradRate` for private and public schools.
+4. Write a sentence or two describing these results and whether it *appears* useful to move from Model C to Model A.
+
+Use both a verbal description and a model statement in LaTeX.
+
+#### Model statements (fill in)
+
+- Model C (compact):
+$$
+Y_i = b_0 + \varepsilon_i
+$$
+- Model A (augmented; conditional means by type):
+$$
+Y_i = b_0 + b_1 X_i + \varepsilon_i
+$$
+where $X_i$ is an indicator you define (e.g., $X_i = 1$ if Private, $0$ if Public).
+
+```{r}
+# Compute mean gradRate by Type (and include n)
+```
+
+### 3) Coupon campaign and store sales (stores)
+
+At 10 grocery stores, a market researcher records the number of cases of a product sold both before and after coupons were mailed to households in the area. The data below are the **changes** in the number of cases sold (positive = more after coupons, negative = fewer, zero = no change).
+
+| Store | Change |
+|---:|---:|
+| A | 5 |
+| B | 4 |
+| C | -2 |
+| D | 6 |
+| E | 1 |
+| F | 0 |
+| G | -4 |
+| H | 3 |
+| I | 2 |
+| J | 7 |
+
+#### 3a) By hand
+
+Calculate the **mean** and **standard deviation** for the change scores by hand (or in Excel).
+
+(Optional check in R after you finish your by-hand work:)
+
+```{r}
+# Create a vector of the change scores and compute mean/sd as a check
+```
+
+#### 3b) Model C (no change)
+
+Specify a Model C that predicts **no change** for every store.
+
+Write it in the same form as class:
+
+$$
+Y_i = \text{(prediction)} + \varepsilon_i
+$$
+
+```{r}
+# Write Model C in words (in the text), then compute SSE(C) in R later
+```
+
+#### 3c) Model A (best constant prediction from the data)
+
+Specify a Model A with one parameter that makes the best possible constant prediction of `Change` based on the data.
+
+$$
+Y_i = b_0 + \varepsilon_i
+$$
+
+```{r}
+# Write Model A in words (in the text), then compute SSE(A) in R later
+```
+
+#### 3d) Null hypothesis and interpretation
+
+State the null hypothesis tested by comparing Model C and Model A, and give a non-technical interpretation of what the comparison asks.
+
+#### 3e) Compute error for both models (SSE)
+
+Using SSE as your aggregate measure of error, compute:
+
+- $\text{SSE}(C)$ for the compact model
+- $\text{SSE}(A)$ for the augmented model
+
+```{r}
+# Compute SSE(C) and SSE(A)
+```
+
+#### 3f) Proportional reduction in error (PRE)
+
+Compute:
+$$
+\text{PRE} = \frac{\text{SSE}(C) - \text{SSE}(A)}{\text{SSE}(C)}.
+$$
+
+Based on this PRE, do you think Model C should be rejected in favor of Model A? (No formal test yet—explain your reasoning.)
+
+```{r}
+# Compute PRE from SSE(C) and SSE(A)
+```
+
+#### 3g) Do it again using `stores.csv`
+
+These data are also available in `stores.csv`. Read in the data and use R to obtain all the numbers you calculated above (including PRE if you can).
+
+```{r}
+stores <- read_csv(here::here("data", "stores.csv"))
+```
+
+```{r}
+# Use the stores data to compute:
+# - mean and sd of Change
+# - SSE(C) where prediction is 0
+# - SSE(A) where prediction is mean(Change)
+# - PRE
+```
+
+::: callout-tip
+A convenient SSE pattern is:
+
+- If predictions are stored in `y_hat`, then `sum((y - y_hat)^2)`.
+- For Model C here, `y_hat` is a constant 0.
+- For Model A here, `y_hat` is a constant equal to `mean(y)`.
+:::
+
+### 4) Concept questions
+
+In your own words (**not** using the example from class):
+
+1. Why is $\text{ERROR}(\text{Model A}) \le \text{ERROR}(\text{Model C})$?
+2. What is a **degree of freedom**?
+
+### 5) Sampling distributions and small samples
+
+Visit the app:
+
+- https://correll.shinyapps.io/centralTendency/
+
+5a) Generate four or five iterations using a normally distributed population and samples of $n = 5$.
+
+- Where do the sampling distributions of the mean peak?
+- How much do the means and medians vary? What minimum and maximum values do you see for each?
+
+5b) Answer the same questions for the mean using $n = 500$. (Rescale the histograms so you can see variability.)
+
+### 6) Central Limit Theorem intuition
+
+Visit the app:
+
+- https://correll.shinyapps.io/centralLimit/
+
+6a) Set a **skewed** population and draw samples of different sizes. What is the shape of the sampling distribution of the mean for samples of $n = 2$?
+
+6b) What is the shape for $n = 10$?
+
+6c) What is the shape for $n = 100$?
