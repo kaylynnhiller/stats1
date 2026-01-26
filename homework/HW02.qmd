@@ -1,14 +1,23 @@
 ---
-title: "Chapter 2 homework"
-format:
-  html:
+title: "Chapter 2 Homework"
+author: "Kaylynn Hiller"
+date: "2026-01-26"
+mainfont: "Georgia"
+format: 
+  html: 
+    theme: cosmo
     toc: true
-    toc-depth: 3
-embed-resources: true
-execute:
-  echo: true
-  message: false
-  warning: false
+    embed-resources: true
+  pdf:
+    colorlinks: true
+    includes:
+      in-header:
+    keep-tex: false
+header-includes:
+  \usepackage{tabularray}
+  \usepackage{siunitx}
+execute: 
+  echo: false
 ---
 
 ## Setup
@@ -19,6 +28,7 @@ Assume you are working in an RStudio Project. Use `here::here("data", "filename.
 library(tidyverse)
 library(here)
 library(psych)   # used for describe()/describeBy() in a few places
+library(broom)
 ```
 
 ```{r}
@@ -49,14 +59,14 @@ d <- d |>
          height_err = height - height_mean)
 
 sse_height <- sum(d$height_err^2)
-sse_height
 
 var_height <- (sse_height)/(nrow(d) - 1)
 sd_height <- sqrt(var_height)
 
 sd_height == sd(d$height)
 
-
+sd_height
+var_height
 ```
 
 #### Convert variance to standard deviation
@@ -86,9 +96,10 @@ n <- d |>
   drop_na(height) |>
   summarize(count = n())
 
-var_height
 SSE <- (n - 1) * var_height
 SSE == sse_height
+
+SSE
 ```
 
 ::: callout-tip
@@ -102,11 +113,12 @@ Compute mean and median:
 ```{r}
 # Mean and median of height
 height_sum <- d |>
-  drop_na(height) |>
+  filter(!is.na(height)) |>
+  ungroup() |>
   summarize(mean_height = mean(height),
             median_height = median(height))
 
-height_sum
+print(as.data.frame(height_sum), digits = 6)
 ```
 
 #### Mode (custom helper)
@@ -214,7 +226,7 @@ The dataset `USNEWS.csv` contains data used by *U.S. News and World Report* to m
 
 For each variable, obtain estimates of central tendency (mean, median, mode) and variability (variance and standard deviation). Write a few sentences describing what you found.
 
-The mean of the graduation rate is relatively close to the median. There is a large amount of standard deviation in the graduation rate as the deviation is 18.8. The nonmissing count for graduation rate and acceptance rate is the same meaning there are no records missing only graduation rate or acceptance rate. The mean of the acceptance rate is relatively farther from the median. There is a large amount of standard deviation in the acceptance rate as well as the deviation is 0.161.
+The mean of the graduation rate is relatively close to the median. There is a large amount of standard deviation in the graduation rate as the deviation is 18.8. The mean of the acceptance rate is relatively farther from the median. There is a large amount of standard deviation in the acceptance rate as well as the deviation is 0.161.
 
 ```{r}
 usnews <- read_csv(here::here("data", "USNEWS.csv"))
@@ -224,13 +236,13 @@ usnews <- read_csv(here::here("data", "USNEWS.csv"))
 # Create a compact summary table for gradRate and accptRate:
 # mean, median, mode, variance, sd, and n (non-missing)
 usnews <- usnews |>
+  drop_na(gradRate, accptRate) |>
   mutate(
     gradRate = as.numeric(gradRate),
     accptRate = as.numeric(accptRate)
   )
 
 gradRate_summary <- usnews |>
-  drop_na(gradRate) |>
   summarize(mean_gradRate = mean(gradRate),
             median_gradRate = median(gradRate),
             mode_gradRate = mymode(gradRate),
@@ -239,7 +251,6 @@ gradRate_summary <- usnews |>
             count = n())
 
 accptRate_summary <- usnews |>
-  drop_na(accptRate) |>
   summarize(mean_accptRate = mean(accptRate),
             median_accptRate = median(accptRate),
             mode_accptRate = mymode(accptRate),
