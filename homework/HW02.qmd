@@ -55,6 +55,8 @@ var_height <- (sse_height)/(nrow(d) - 1)
 sd_height <- sqrt(var_height)
 
 sd_height == sd(d$height)
+
+
 ```
 
 #### Convert variance to standard deviation
@@ -81,8 +83,9 @@ $$
 # Compute n, variance, and then SSE = var * (n - 1)
 
 n <- d |>
-  filter(!is.na(height)) |>
-  nrow()
+  drop_na(height) |>
+  summarize(count = n())
+
 var_height
 SSE <- (n - 1) * var_height
 SSE == sse_height
@@ -98,8 +101,12 @@ Compute mean and median:
 
 ```{r}
 # Mean and median of height
-mean_height <- mean(d$height)
-median_height <- median(d$height)
+height_sum <- d |>
+  drop_na(height) |>
+  summarize(mean_height = mean(height),
+            median_height = median(height))
+
+height_sum
 ```
 
 #### Mode (custom helper)
@@ -129,35 +136,15 @@ Compute mean and SD of height by gender using tidyverse verbs:
 # - n
 # - mean height
 # - sd height
-n1 <- d |>
-  filter(!is.na(height) & gender == 1) |>
-  nrow()
 
-n1
-
-n2 <- d |>
-  filter(!is.na(height) & gender == 2) |>
-  nrow()
-
-n2
-
-mean_bygender <- d |> 
+sum_bygender <- d |>
+  drop_na(height, gender) |>
   group_by(gender) |> 
-  summarize(mean_height = mean(height))
+  summarize(count = n(),
+            mean_height = mean(height),
+            sd_height = sd(height))
 
-mean_bygender
-
-d_1 <- d |>
-  filter(!is.na(height) & gender == 1)
-d_1
-
-sd_height_1 <- sd(d_1$height)
-
-d_2 <- d |>
-  filter(!is.na(height) & gender == 2)
-d_2
-
-sd_height_2 <- sd(d_2$height)
+sum_bygender
 ```
 
 If you want a richer descriptive table, `psych::describeBy()` can do that:
@@ -213,7 +200,7 @@ Many functions accept `na.rm = TRUE` to ignore missing values.
 You can also drop missing values explicitly:
 
 ```{r}
-# heart |> drop_na(Height) |> summarize(mean_height = mean(Height))
+heart |> drop_na(Height) |> summarize(mean_height = mean(Height))
 ```
 
 ## HW 02 Questions
@@ -227,6 +214,8 @@ The dataset `USNEWS.csv` contains data used by *U.S. News and World Report* to m
 
 For each variable, obtain estimates of central tendency (mean, median, mode) and variability (variance and standard deviation). Write a few sentences describing what you found.
 
+The mean of the graduation rate is relatively close to the median. There is a large amount of standard deviation in the graduation rate as the deviation is 18.8. The nonmissing count for graduation rate and acceptance rate is the same meaning there are no records missing only graduation rate or acceptance rate. The mean of the acceptance rate is relatively farther from the median. There is a large amount of standard deviation in the acceptance rate as well as the deviation is 0.161.
+
 ```{r}
 usnews <- read_csv(here::here("data", "USNEWS.csv"))
 ```
@@ -234,6 +223,32 @@ usnews <- read_csv(here::here("data", "USNEWS.csv"))
 ```{r}
 # Create a compact summary table for gradRate and accptRate:
 # mean, median, mode, variance, sd, and n (non-missing)
+usnews <- usnews |>
+  mutate(
+    gradRate = as.numeric(gradRate),
+    accptRate = as.numeric(accptRate)
+  )
+
+gradRate_summary <- usnews |>
+  drop_na(gradRate) |>
+  summarize(mean_gradRate = mean(gradRate),
+            median_gradRate = median(gradRate),
+            mode_gradRate = mymode(gradRate),
+            var_gradRate = var(gradRate),
+            sd_gradRate = sd(gradRate),
+            count = n())
+
+accptRate_summary <- usnews |>
+  drop_na(accptRate) |>
+  summarize(mean_accptRate = mean(accptRate),
+            median_accptRate = median(accptRate),
+            mode_accptRate = mymode(accptRate),
+            var_accptRate = var(accptRate),
+            sd_accptRate = sd(accptRate),
+            count = n())
+
+gradRate_summary
+accptRate_summary
 ```
 
 ### 2) Conditional vs unconditional predictions (USNEWS)
@@ -241,23 +256,50 @@ usnews <- read_csv(here::here("data", "USNEWS.csv"))
 Another interesting variable is `Type` (public vs private).
 
 1.  Write **Model C** that makes a constant prediction for every school.
+
+```{r}
+mod_c <- lm(gradRate ~ 1,
+            data = usnews)
+
+tidy(mod_c)
+```
+
 2.  Write **Model A** that makes predictions of `gradRate` conditional on `Type`.
+
+```{r}
+usnews <- usnews |> 
+  mutate(Private = if_else(Type == "Private", 1, 0))
+
+mod_a <- lm(gradRate ~ 1 + Private,
+             data = usnews)
+
+tidy(mod_a)
+```
+
 3.  As a first look at whether Model A might be useful, compute the mean `gradRate` for private and public schools.
 4.  Write a sentence or two describing these results and whether it *appears* useful to move from Model C to Model A.
+
+Model A appears more useful than Model C. The graduation rate for private schools is 16% higher compared to public schools. This large difference means control for the type of school would likely reduce error in the model.
 
 Use both a verbal description and a model statement in LaTeX.
 
 #### Model statements (fill in)
 
 -   Model C (compact): $$
-    Y_i = b_0 + \varepsilon_i
+    gradRate_i = b_0 + \varepsilon_i
     $$
 -   Model A (augmented; conditional means by type): $$
-    Y_i = b_0 + b_1 X_i + \varepsilon_i
+    gradRate_i = b_0 + b_1 X_i + \varepsilon_i
     $$ where $X_i$ is an indicator you define (e.g., $X_i = 1$ if Private, $0$ if Public).
 
 ```{r}
 # Compute mean gradRate by Type (and include n)
+sum_byType <- usnews |>
+  drop_na(gradRate, Type) |>
+  group_by(Type) |> 
+  summarize(count = n(),
+            mean_gradRate = mean(gradRate))
+sum_byType
 ```
 
 ### 3) Coupon campaign and store sales (stores)
