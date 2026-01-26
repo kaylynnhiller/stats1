@@ -1,11 +1,23 @@
 ---
-title: "Chapter 3 homework"
-format: html
-embed-resources: true
-execute:
-  echo: true
-  message: false
-  warning: false
+title: "Chapter 3 Homework"
+author: "Kaylynn Hiller"
+date: "2026-01-26"
+mainfont: "Georgia"
+format: 
+  html: 
+    theme: cosmo
+    toc: true
+    embed-resources: true
+  pdf:
+    colorlinks: true
+    includes:
+      in-header:
+    keep-tex: false
+header-includes:
+  \usepackage{tabularray}
+  \usepackage{siunitx}
+execute: 
+  echo: false
 ---
 
 ## Setup
@@ -32,13 +44,15 @@ The dataset `fitness.csv` contains (among other variables) resting pulse rate (`
 
 Write both a verbal description and a mathematical statement.
 
--   **MODEL C (compact):** predicts the reference value for every case\
+-   **MODEL C (compact):** predicts the reference value for every case, meaning that we predict the resting pulse rate for each man should similar to the normal resting heart rate of 72.\
     $$\text{RSTPULSE}_i = 72 + \varepsilon_i$$
 
--   **MODEL A (augmented):** estimates the sample mean (one-parameter model)\
+-   **MODEL A (augmented):** estimates the sample mean (one-parameter model). This estimates the average resting pulse rate for men in the sample.\
     $$\text{RSTPULSE}_i = b_0 + \varepsilon_i$$
 
--   **Null hypothesis:** $H_0: b_0 = 72$ (equivalently, the population mean resting pulse equals 72)
+-   **Null hypothesis:** $H_0: b_0 = 72$
+
+    -   The null hypothesis is that this sample of men will have a resting heart rate of 72 which is the "normal" resting heart rate.
 
 ### (b) Estimate both models with `lm()`
 
@@ -83,6 +97,8 @@ pre
 
 In a short paragraph, summarize what you found and what it suggests substantively. (We are not doing a formal test yet—use your judgment.)
 
+The potential reduction in error seems large. This would suggest that for our sample of men their resting heart rate is substantially different from the "normal" resting heart rate of 72. Looking at the estimate for Model A (the sample mean), the estimate is negative. This suggests that for our sample, the resting heart rate is lower than the normal resting heart rate of 72.
+
 ------------------------------------------------------------------------
 
 ## 2. Did running increase pulse rate?
@@ -95,13 +111,13 @@ Tip: Create a new variable that captures the *change* in pulse rate.
 
 Let $\Delta_i = \text{RUNPULSE}_i - \text{RSTPULSE}_i$.
 
--   **MODEL C (compact):** no average increase\
+-   **MODEL C (compact):** no average increase in heart rate after running.\
     $$\Delta_i = 0 + \varepsilon_i$$
 
--   **MODEL A (augmented):** estimate the average increase\
+-   **MODEL A (augmented):** estimates the average increase in heart rate after running based on our sample.\
     $$\Delta_i = b_0 + \varepsilon_i$$
 
--   **Null hypothesis:** $H_0: b_0 = 0$
+-   **Null hypothesis:** $H_0: b_0 = 0$ there is no increase in heart rate after running.
 
 ### (b) Estimate both models with `lm()`
 
@@ -133,6 +149,8 @@ pre
 
 In a short paragraph, summarize what you found and what it suggests substantively.
 
+There is a very large reduction in error for Model A. This suggests that our change in heart rate from running is very different. The estimate of sample mean for Model A is positive. This suggests that there is an increase in the heart rate of individuals after running. This would make sense based on real world observations of running (my heart rate goes up a lot when running).
+
 ------------------------------------------------------------------------
 
 ## 3. Conceptual practice: write models and hypotheses
@@ -149,13 +167,71 @@ Do **not** write your models generically as “$Y = \dots$”. Use the named dep
 
 IQ tests are designed to have mean 100 and standard deviation 15. You give 6 friends an online IQ test. Are your friends smarter than average?
 
+1.  Specify MODEL C, MODEL A, and the null hypothesis.
+
+-   **MODEL C (compact):** the reference value is 100 for this IQ test. For our sample, the average IQ should be 100.\
+    $$\text{IQ}_i = 100 + \varepsilon_i$$
+
+-   **MODEL A (augmented):** estimates the sample mean (one-parameter model). This estimates the average IQ for my 6 friends.\
+    $$\text{IQ}_i = b_0 + \varepsilon_i$$
+
+-   **Null hypothesis:** $H_0: b_0 = 100$, The null hypothesis is that this sample of friends will have an IQ of 100 which is the "normal" IQ.
+
+2.  State the number of parameters in MODEL C and MODEL A.
+
+There are 0 parameters in Model C and 1 parameter in Model A.
+
+3.  State the number of **unused-but-potential parameters** in MODEL A (degrees of freedom), using the course definition.
+
+There are 5 unused but potential parameters in Model A. One parameter is used to estimate mean. Since there are 6 friends (n = 6), this leaves 5 unused parameters (degrees of freedom).
+
 ### (b) PTSD
 
 The army uses a PTSD test; scores above 37 indicate clinical levels of PTSD. A troop of 43 soldiers is tested at the end of deployment. Are these soldiers, on average, suffering from PTSD?
 
+1.  Specify MODEL C, MODEL A, and the null hypothesis.
+
+-   **MODEL C (compact):** the reference value is 37 for this PTSD test. We can center our responses around 37 since we want to see if on average scores were greater or less than this reference value. I centered the model using: Let $\Delta_i = \text{PTSD}_i - 37$.
+
+    Let $\Delta_i = \text{PTSD}_i - 37$.\
+    $$\Delta_i = 0 + \varepsilon_i$$
+
+-   **MODEL A (augmented):** estimates the sample mean (one-parameter model). This estimates the average PTSD score for the troop of 43 soldiers.\
+    $$\Delta_i = b_0 + \varepsilon_i$$
+
+-   **Null hypothesis:** $H_0: b_0 = 0$, The null hypothesis is that soldiers will have an average score equal to 37.
+
+2.  State the number of parameters in MODEL C and MODEL A.
+
+There are 0 parameters in Model C and 1 parameter in Model A.
+
+3.  State the number of **unused-but-potential parameters** in MODEL A (degrees of freedom), using the course definition.
+
+There are 42 unused but potential parameters in Model A. One parameter is used to estimate mean. Since there are 43 soldiers (n = 43), this leave 42 unused parameters (degrees of freedom).
+
 ### (c) Chipotle sales
 
 Chipotle wants to know whether sales have rebounded after an E. coli scare. They have sales in 200 markets *before* the scare and *now*. They compute a difference score. Are sales depressed?
+
+1.  Specify MODEL C, MODEL A, and the null hypothesis.
+
+Let $\Delta_i = \text{SALESNOW}_i - \text{SALESBEFORE}_i$.
+
+-   **MODEL C (compact):** the reference value is 0 for analysis. For our sample, their should be no change in sales.\
+    $$\Delta_i = 0 + \varepsilon_i$$
+
+-   **MODEL A (augmented):** estimates the sample mean (one-parameter model). This estimates the average difference in sales for the 200 markets.\
+    $$\Delta_i = b_0 + \varepsilon_i$$
+
+-   **Null hypothesis:** $H_0: b_0 = 0$, The null hypothesis is that this sample of markets will have no change in sales before and after an E. coli scare.
+
+2.  State the number of parameters in MODEL C and MODEL A.
+
+There are 0 parameters in Model C and 1 parameter in Model A.
+
+3.  State the number of **unused-but-potential parameters** in MODEL A (degrees of freedom), using the course definition.
+
+There are 199 unused but potential parameters in Model A. One parameter is used to estimate mean. Since there are 200 markets (n = 200), this leave 199 unused parameters (degrees of freedom).
 
 ------------------------------------------------------------------------
 
@@ -163,30 +239,73 @@ Chipotle wants to know whether sales have rebounded after an E. coli scare. They
 
 Please choose a variable from the 2024 General Social Survey. Remember to use `drop_na()` in your pipeline to get rid of missing data.
 
+```{r}
+gss2024 <- readRDS(file = here::here("data", "gss2024.rds"))
+
+mydata <- gss2024 |> 
+  select(pillok) |> 
+  drop_na() |> 
+  haven::zap_labels()
+```
+
 ### (a) Describe your dataset
 
 Include enough detail that someone else can understand what you have.
 
 -   **(a.1)** What are the units of analysis and how many are there?
+
+The units of analysis is the individual. Each row in this data is equivalent to the responses of one individual to the survey.
+
 -   **(a.2)** What is the dependent variable ($Y$)? How is it measured? What does its distribution look like? (A histogram and/or descriptives are fine.)
+
+The dependent variable I chose is pillok. In the GSS, respondents were asked "Do you strongly agree, agree, disagree, or strongly disagree that methods of birth control should be available to teenagers between the ages of 14 and 16 if their parents do not approve?" These responses correlate to the values 1 (strongly agree), 2 (agree), 3 (disagree), 4 (strongly disagree), and NA (no response or not asked).
 
 ```{r}
 # If you have data loaded, you can start with something like:
-# your_data |>
-#   summarize(
-#     n = n(),
-#     mean_y = mean(Y, na.rm = TRUE),
-#     sd_y = sd(Y, na.rm = TRUE)
-#   )
+mydata |>
+   summarize(
+     n = n(),
+     mean_pillok = mean(pillok),
+     median_pillok = median(pillok),
+     var_pillok = var(pillok),
+     sd_pillok = sd(pillok)
+   )
+slice_min(mydata, pillok)
+mydata |>
+  ggplot(aes(x = factor(pillok))) +
+  geom_bar(fill = "steelblue") +
+  scale_x_discrete(
+    labels = c(
+      "1" = "Strongly Agree",
+      "2" = "Agree",
+      "3" = "Disagree",
+      "4" = "Strongly Disagree"
+    )
+  ) +
+  labs(title =str_wrap("Do you think that methods of birth control should be available to teenagers between the ages of 14 and 16 if their parents do not approve?", width = 60), subtitle = "Using 2024 GSS Data", y = "Number of Respondents Who Agree", x = "")
 ```
 
 ### (b) Propose a one-parameter question
 
 Think of a question that can be tested with a MODEL C with **0 parameters** and a MODEL A that uses **1 parameter** to estimate central tendency. Write the research question in plain language.
 
+On average, do people tend to agree or disagree that teenagers should have access to birth control?
+
 ### (c) Specify MODEL A, MODEL C, and the null hypothesis
 
 Write both a verbal description and a mathematical statement (use $\varepsilon_i$ for error).
+
+-   **MODEL C (compact):** the reference value is 2 for this analysis. We can center our responses around 2 since we want to see if on average scores were greater or less than this reference value. I centered the model using: Let $\Delta_i = \text{BC}_i - 2$.
+
+    Let $\Delta_i = \text{BC}_i - 2$.\
+    $$\Delta_i = 0 + \varepsilon_i$$
+
+<!-- -->
+
+-   **MODEL A (augmented):** estimates the sample mean (one-parameter model). This estimates the average response for individuals asked this question in the 2024 GSS.\
+    $$\Delta_i = b_0 + \varepsilon_i$$
+
+-   **Null hypothesis:** $H_0: b0 = 0$, The null hypothesis is that, on average, respondents neither lean toward agreement nor disagreement relative to ‘agree’.
 
 ### (d) Estimate both models with `lm()`
 
@@ -194,23 +313,23 @@ Write both a verbal description and a mathematical statement (use $\varepsilon_i
 # Replace Y with your dependent variable and adapt as needed.
 # If your null value is mu0, you can use the same deviation trick as in Question 1:
 #
-# your_data <- your_data |>
-#   mutate(y_dev = Y - mu0)
-#
-# model_c <- lm(y_dev ~ 0, data = your_data)
-# model_a <- lm(y_dev ~ 1, data = your_data)
-#
-# summary(model_c)
-# summary(model_a)
+mydata <- mydata |>
+   mutate(pill_dev = pillok - 2)
+
+ model_c <- lm(pill_dev ~ 0, data = mydata)
+ model_a <- lm(pill_dev ~ 1, data = mydata)
+
+summary(model_c)
+summary(model_a)
 ```
 
 ### (e) Calculate PRE
 
 ```{r}
-# sse_c <- deviance(model_c)
-# sse_a <- deviance(model_a)
-# pre <- (sse_c - sse_a) / sse_c
-# pre
+sse_c <- deviance(model_c)
+sse_a <- deviance(model_a)
+pre <- (sse_c - sse_a) / sse_c
+pre
 ```
 
 ------------------------------------------------------------------------
