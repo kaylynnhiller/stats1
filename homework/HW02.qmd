@@ -38,7 +38,23 @@ In class, we talked about quantifying variation. Variance and standard deviation
 Start by computing the sample standard deviation and sample variance of height:
 
 ```{r}
+#format data
+d <- heart |>
+  rename_with(tolower)
+
 # Compute sd and variance of height
+d <- d |> 
+  drop_na(height) |>
+  mutate(height_mean = mean(height),
+         height_err = height - height_mean)
+
+sse_height <- sum(d$height_err^2)
+sse_height
+
+var_height <- (sse_height)/(nrow(d) - 1)
+sd_height <- sqrt(var_height)
+
+sd_height == sd(d$height)
 ```
 
 #### Convert variance to standard deviation
@@ -47,12 +63,15 @@ Recall: $\text{SD} = \sqrt{\text{Var}}$.
 
 ```{r}
 # Convert variance to SD using R as a calculator
+a <- sd_height^2
+a <- round(a, 10)
+b <- round(var_height, 10)
+a == b
 ```
 
 #### Compute SSE from the variance and sample size
 
-For the *sample* variance,
-$$
+For the *sample* variance, $$
 s^2 = \frac{\text{SSE}}{n-1}
 \quad\Rightarrow\quad
 \text{SSE} = s^2 (n-1).
@@ -60,6 +79,13 @@ $$
 
 ```{r}
 # Compute n, variance, and then SSE = var * (n - 1)
+
+n <- d |>
+  filter(!is.na(height)) |>
+  nrow()
+var_height
+SSE <- (n - 1) * var_height
+SSE == sse_height
 ```
 
 ::: callout-tip
@@ -72,6 +98,8 @@ Compute mean and median:
 
 ```{r}
 # Mean and median of height
+mean_height <- mean(d$height)
+median_height <- median(d$height)
 ```
 
 #### Mode (custom helper)
@@ -89,6 +117,7 @@ mymode <- function(x) {
 
 ```{r}
 # Use mymode() to compute the mode of height
+mode_height <- mymode(d$height)
 ```
 
 ### 3) Group and summarize a dataset
@@ -100,12 +129,41 @@ Compute mean and SD of height by gender using tidyverse verbs:
 # - n
 # - mean height
 # - sd height
+n1 <- d |>
+  filter(!is.na(height) & gender == 1) |>
+  nrow()
+
+n1
+
+n2 <- d |>
+  filter(!is.na(height) & gender == 2) |>
+  nrow()
+
+n2
+
+mean_bygender <- d |> 
+  group_by(gender) |> 
+  summarize(mean_height = mean(height))
+
+mean_bygender
+
+d_1 <- d |>
+  filter(!is.na(height) & gender == 1)
+d_1
+
+sd_height_1 <- sd(d_1$height)
+
+d_2 <- d |>
+  filter(!is.na(height) & gender == 2)
+d_2
+
+sd_height_2 <- sd(d_2$height)
 ```
 
 If you want a richer descriptive table, `psych::describeBy()` can do that:
 
 ```{r}
-# describeBy(heart$Height, heart$Gender, mat = TRUE)
+describeBy(d$height, d$gender, mat = TRUE)
 ```
 
 ::: callout-tip
@@ -118,15 +176,31 @@ One way to compute SSE around the **mean model** (predict $\bar{Y}$ for everyone
 
 ```{r}
 # Compute SSE around the mean
+d <- d |> 
+  drop_na(height) |>
+  mutate(height_mean = mean(height),
+         height_err_mean = height - height_mean)
+
+sse_height_mean <- sum(d$height_err_mean^2)
+sse_height_mean
 ```
 
 Now modify that idea to compute SSE around the **median model** (predict $\tilde{Y}$ for everyone).
 
 ```{r}
 # Compute SSE around the median
+d <- d |> 
+  drop_na(height) |>
+  mutate(height_median = median(height),
+         height_err_median = height - height_median)
+
+sse_height_median <- sum(d$height_err_median^2)
+sse_height_median
 ```
 
 Answer in words: is SSE around the median larger or smaller than SSE around the mean for these data?
+
+The SSE around the median is larger that the SSE around the mean.
 
 ### 5) Missing data
 
@@ -148,8 +222,8 @@ You can also drop missing values explicitly:
 
 The dataset `USNEWS.csv` contains data used by *U.S. News and World Report* to make its college rankings. Two variables of interest are:
 
-- `gradRate`: graduation rate (percent from 0 to 100)
-- `accptRate`: acceptance rate (proportion from 0 to 1)
+-   `gradRate`: graduation rate (percent from 0 to 100)
+-   `accptRate`: acceptance rate (proportion from 0 to 1)
 
 For each variable, obtain estimates of central tendency (mean, median, mode) and variability (variance and standard deviation). Write a few sentences describing what you found.
 
@@ -166,24 +240,21 @@ usnews <- read_csv(here::here("data", "USNEWS.csv"))
 
 Another interesting variable is `Type` (public vs private).
 
-1. Write **Model C** that makes a constant prediction for every school.
-2. Write **Model A** that makes predictions of `gradRate` conditional on `Type`.
-3. As a first look at whether Model A might be useful, compute the mean `gradRate` for private and public schools.
-4. Write a sentence or two describing these results and whether it *appears* useful to move from Model C to Model A.
+1.  Write **Model C** that makes a constant prediction for every school.
+2.  Write **Model A** that makes predictions of `gradRate` conditional on `Type`.
+3.  As a first look at whether Model A might be useful, compute the mean `gradRate` for private and public schools.
+4.  Write a sentence or two describing these results and whether it *appears* useful to move from Model C to Model A.
 
 Use both a verbal description and a model statement in LaTeX.
 
 #### Model statements (fill in)
 
-- Model C (compact):
-$$
-Y_i = b_0 + \varepsilon_i
-$$
-- Model A (augmented; conditional means by type):
-$$
-Y_i = b_0 + b_1 X_i + \varepsilon_i
-$$
-where $X_i$ is an indicator you define (e.g., $X_i = 1$ if Private, $0$ if Public).
+-   Model C (compact): $$
+    Y_i = b_0 + \varepsilon_i
+    $$
+-   Model A (augmented; conditional means by type): $$
+    Y_i = b_0 + b_1 X_i + \varepsilon_i
+    $$ where $X_i$ is an indicator you define (e.g., $X_i = 1$ if Private, $0$ if Public).
 
 ```{r}
 # Compute mean gradRate by Type (and include n)
@@ -194,17 +265,17 @@ where $X_i$ is an indicator you define (e.g., $X_i = 1$ if Private, $0$ if Publi
 At 10 grocery stores, a market researcher records the number of cases of a product sold both before and after coupons were mailed to households in the area. The data below are the **changes** in the number of cases sold (positive = more after coupons, negative = fewer, zero = no change).
 
 | Store | Change |
-|---:|---:|
-| A | 5 |
-| B | 4 |
-| C | -2 |
-| D | 6 |
-| E | 1 |
-| F | 0 |
-| G | -4 |
-| H | 3 |
-| I | 2 |
-| J | 7 |
+|------:|-------:|
+|     A |      5 |
+|     B |      4 |
+|     C |     -2 |
+|     D |      6 |
+|     E |      1 |
+|     F |      0 |
+|     G |     -4 |
+|     H |      3 |
+|     I |      2 |
+|     J |      7 |
 
 #### 3a) By hand
 
@@ -250,8 +321,8 @@ State the null hypothesis tested by comparing Model C and Model A, and give a no
 
 Using SSE as your aggregate measure of error, compute:
 
-- $\text{SSE}(C)$ for the compact model
-- $\text{SSE}(A)$ for the augmented model
+-   $\text{SSE}(C)$ for the compact model
+-   $\text{SSE}(A)$ for the augmented model
 
 ```{r}
 # Compute SSE(C) and SSE(A)
@@ -259,8 +330,7 @@ Using SSE as your aggregate measure of error, compute:
 
 #### 3f) Proportional reduction in error (PRE)
 
-Compute:
-$$
+Compute: $$
 \text{PRE} = \frac{\text{SSE}(C) - \text{SSE}(A)}{\text{SSE}(C)}.
 $$
 
@@ -289,28 +359,28 @@ stores <- read_csv(here::here("data", "stores.csv"))
 ::: callout-tip
 A convenient SSE pattern is:
 
-- If predictions are stored in `y_hat`, then `sum((y - y_hat)^2)`.
-- For Model C here, `y_hat` is a constant 0.
-- For Model A here, `y_hat` is a constant equal to `mean(y)`.
+-   If predictions are stored in `y_hat`, then `sum((y - y_hat)^2)`.
+-   For Model C here, `y_hat` is a constant 0.
+-   For Model A here, `y_hat` is a constant equal to `mean(y)`.
 :::
 
 ### 4) Concept questions
 
 In your own words (**not** using the example from class):
 
-1. Why is $\text{ERROR}(\text{Model A}) \le \text{ERROR}(\text{Model C})$?
-2. What is a **degree of freedom**?
+1.  Why is $\text{ERROR}(\text{Model A}) \le \text{ERROR}(\text{Model C})$?
+2.  What is a **degree of freedom**?
 
 ### 5) Sampling distributions and small samples
 
 Visit the app:
 
-- https://correll.shinyapps.io/centralTendency/
+-   https://correll.shinyapps.io/centralTendency/
 
 5a) Generate four or five iterations using a normally distributed population and samples of $n = 5$.
 
-- Where do the sampling distributions of the mean peak?
-- How much do the means and medians vary? What minimum and maximum values do you see for each?
+-   Where do the sampling distributions of the mean peak?
+-   How much do the means and medians vary? What minimum and maximum values do you see for each?
 
 5b) Answer the same questions for the mean using $n = 500$. (Rescale the histograms so you can see variability.)
 
@@ -318,7 +388,7 @@ Visit the app:
 
 Visit the app:
 
-- https://correll.shinyapps.io/centralLimit/
+-   https://correll.shinyapps.io/centralLimit/
 
 6a) Set a **skewed** population and draw samples of different sizes. What is the shape of the sampling distribution of the mean for samples of $n = 2$?
 

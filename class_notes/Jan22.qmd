@@ -42,7 +42,7 @@ d <- gss2024 |>
   haven::zap_labels() #removes value labels
 
 #View(d)
-#glimps(d)
+#glimpse(d)
 
 #?polviews #pulls up help files
 #glimpse(gss2024)
@@ -79,7 +79,6 @@ Estimate PRE
 ```{r}
 (sse_c - sse_a) / sse_c
 ```
-
 
 Getting model C with lm(). FIrst let's make a version of polviews "centered" on 4.
 
@@ -184,4 +183,3 @@ deviance(model3) #b0 and b1
 
 glance(model3) #r squared is proportional reduction in error compared to 1 parameter model
 ```
-

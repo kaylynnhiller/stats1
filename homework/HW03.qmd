@@ -22,7 +22,7 @@ The course datasets live in your project’s `data/` folder. Use `here::here()` 
 fitness <- readr::read_csv(here::here("data", "fitness.csv"))
 ```
 
----
+------------------------------------------------------------------------
 
 ## 1. Is this a “normal” group (resting pulse)?
 
@@ -32,13 +32,13 @@ The dataset `fitness.csv` contains (among other variables) resting pulse rate (`
 
 Write both a verbal description and a mathematical statement.
 
-- **MODEL C (compact):** predicts the reference value for every case  
-  $$\text{RSTPULSE}_i = 72 + \varepsilon_i$$
+-   **MODEL C (compact):** predicts the reference value for every case\
+    $$\text{RSTPULSE}_i = 72 + \varepsilon_i$$
 
-- **MODEL A (augmented):** estimates the sample mean (one-parameter model)  
-  $$\text{RSTPULSE}_i = b_0 + \varepsilon_i$$
+-   **MODEL A (augmented):** estimates the sample mean (one-parameter model)\
+    $$\text{RSTPULSE}_i = b_0 + \varepsilon_i$$
 
-- **Null hypothesis:** $H_0: b_0 = 72$ (equivalently, the population mean resting pulse equals 72)
+-   **Null hypothesis:** $H_0: b_0 = 72$ (equivalently, the population mean resting pulse equals 72)
 
 ### (b) Estimate both models with `lm()`
 
@@ -46,8 +46,8 @@ A convenient way to fit these with `lm()` is to *re-express* the outcome as a de
 
 Let $Y_i = \text{RSTPULSE}_i - 72$. Then:
 
-- MODEL C becomes $Y_i = 0 + \varepsilon_i$ (0 parameters)
-- MODEL A becomes $Y_i = b_0 + \varepsilon_i$ (1 parameter)
+-   MODEL C becomes $Y_i = 0 + \varepsilon_i$ (0 parameters)
+-   MODEL A becomes $Y_i = b_0 + \varepsilon_i$ (1 parameter)
 
 ```{r}
 fitness <- fitness |>
@@ -83,7 +83,7 @@ pre
 
 In a short paragraph, summarize what you found and what it suggests substantively. (We are not doing a formal test yet—use your judgment.)
 
----
+------------------------------------------------------------------------
 
 ## 2. Did running increase pulse rate?
 
@@ -95,13 +95,13 @@ Tip: Create a new variable that captures the *change* in pulse rate.
 
 Let $\Delta_i = \text{RUNPULSE}_i - \text{RSTPULSE}_i$.
 
-- **MODEL C (compact):** no average increase  
-  $$\Delta_i = 0 + \varepsilon_i$$
+-   **MODEL C (compact):** no average increase\
+    $$\Delta_i = 0 + \varepsilon_i$$
 
-- **MODEL A (augmented):** estimate the average increase  
-  $$\Delta_i = b_0 + \varepsilon_i$$
+-   **MODEL A (augmented):** estimate the average increase\
+    $$\Delta_i = b_0 + \varepsilon_i$$
 
-- **Null hypothesis:** $H_0: b_0 = 0$
+-   **Null hypothesis:** $H_0: b_0 = 0$
 
 ### (b) Estimate both models with `lm()`
 
@@ -133,15 +133,15 @@ pre
 
 In a short paragraph, summarize what you found and what it suggests substantively.
 
----
+------------------------------------------------------------------------
 
 ## 3. Conceptual practice: write models and hypotheses
 
 For each prompt below:
 
-1. Specify MODEL C, MODEL A, and the null hypothesis.
-2. State the number of parameters in MODEL C and MODEL A.
-3. State the number of **unused-but-potential parameters** in MODEL A (degrees of freedom), using the course definition.
+1.  Specify MODEL C, MODEL A, and the null hypothesis.
+2.  State the number of parameters in MODEL C and MODEL A.
+3.  State the number of **unused-but-potential parameters** in MODEL A (degrees of freedom), using the course definition.
 
 Do **not** write your models generically as “$Y = \dots$”. Use the named dependent variable (e.g., “IQ”, “PTSD score”, etc.). If a prompt implies a *constructed variable*, define it.
 
@@ -157,7 +157,7 @@ The army uses a PTSD test; scores above 37 indicate clinical levels of PTSD. A t
 
 Chipotle wants to know whether sales have rebounded after an E. coli scare. They have sales in 200 markets *before* the scare and *now*. They compute a difference score. Are sales depressed?
 
----
+------------------------------------------------------------------------
 
 ## 4. With your own data
 
@@ -167,8 +167,8 @@ Please choose a variable from the 2024 General Social Survey. Remember to use `d
 
 Include enough detail that someone else can understand what you have.
 
-- **(a.1)** What are the units of analysis and how many are there?
-- **(a.2)** What is the dependent variable ($Y$)? How is it measured? What does its distribution look like? (A histogram and/or descriptives are fine.)
+-   **(a.1)** What are the units of analysis and how many are there?
+-   **(a.2)** What is the dependent variable ($Y$)? How is it measured? What does its distribution look like? (A histogram and/or descriptives are fine.)
 
 ```{r}
 # If you have data loaded, you can start with something like:
@@ -213,7 +213,7 @@ Write both a verbal description and a mathematical statement (use $\varepsilon_i
 # pre
 ```
 
----
+------------------------------------------------------------------------
 
 ## Submission
 
