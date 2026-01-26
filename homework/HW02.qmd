@@ -496,10 +496,10 @@ Visit the app:
 
 5b) Answer the same questions for the mean using $n = 500$. (Rescale the histograms so you can see variability.)
 
--   The sampling distributions of the mean peak around 10 with slight variance.
--   The means and medians vary slightly. The medians vary more compared to the means. The minimum value for means is 9.94 and the maximum value is 10.22. The minimum value for the medians is 9.6 and the maximum value is 10.4.
--   Means: 10.14, 10.18, 9.94, 10.22, 10.03
--   Medians: 10.4, 9.7, 9.9, 10, 9.6
+-   The sampling distributions of the mean peak around 10.1 with slight variance.
+-   The means vary slightly while the medians had no variation. The minimum value for means is 10.07 and the maximum value is 10.12. I got 10.1 for all median values.
+-   Means: 10.09, 10.11, 10.12, 10.07, 10.09
+-   Medians: 10.1, 10.1, 10.1, 10.1, 10.1
 
 ### 6) Central Limit Theorem intuition
 
@@ -509,6 +509,12 @@ Visit the app:
 
 6a) Set a **skewed** population and draw samples of different sizes. What is the shape of the sampling distribution of the mean for samples of $n = 2$?
 
+The sampling distribution is very right skewed.
+
 6b) What is the shape for $n = 10$?
 
+This sampling is slightly right skewed compared to the previous sampling.
+
 6c) What is the shape for $n = 100$?
+
+This sampling is even less right skewed, but still slightly skewed.
