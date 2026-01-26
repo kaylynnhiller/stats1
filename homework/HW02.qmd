@@ -323,20 +323,42 @@ At 10 grocery stores, a market researcher records the number of cases of a produ
 
 Calculate the **mean** and **standard deviation** for the change scores by hand (or in Excel).
 
+mean = 2.2
+
+standard deviation = 3.521363
+
 (Optional check in R after you finish your by-hand work:)
 
 ```{r}
 # Create a vector of the change scores and compute mean/sd as a check
+
+store <- letters[1:10]
+change <- c(5, 4, -2, 6, 1, 0, -4, 3, 2, 7)
+
+coupons <- tibble(
+  store = store,
+  change = change
+)
+
+coupons
+
+coupons <- coupons |>
+  mutate(mean_change = mean(change),
+         sd_change = sd(change))
+
+coupons
 ```
 
 #### 3b) Model C (no change)
 
 Specify a Model C that predicts **no change** for every store.
 
+This model predicts that the change in cases sold is 0 for stores.
+
 Write it in the same form as class:
 
 $$
-Y_i = \text{(prediction)} + \varepsilon_i
+\Delta_i = 0 + \varepsilon_i
 $$
 
 ```{r}
@@ -345,10 +367,12 @@ $$
 
 #### 3c) Model A (best constant prediction from the data)
 
+This model predicts that the change in cases sold is equal to the average number of cases sold in this sample
+
 Specify a Model A with one parameter that makes the best possible constant prediction of `Change` based on the data.
 
 $$
-Y_i = b_0 + \varepsilon_i
+\Delta_i = b_0 + \varepsilon_i
 $$
 
 ```{r}
@@ -359,6 +383,8 @@ $$
 
 State the null hypothesis tested by comparing Model C and Model A, and give a non-technical interpretation of what the comparison asks.
 
+The null hypothesis assumes there is no change in the number of cases sold when there are coupons. We are testing to see if the change in the number of cases sold is different from 0 (or there is change compared to no change).
+
 #### 3e) Compute error for both models (SSE)
 
 Using SSE as your aggregate measure of error, compute:
@@ -368,6 +394,19 @@ Using SSE as your aggregate measure of error, compute:
 
 ```{r}
 # Compute SSE(C) and SSE(A)
+coupons <- coupons |> 
+  mutate(mod_c_pred = 0,
+         mod_c_err = change - mod_c_pred)
+
+sse_c <- sum(coupons$mod_c_err^2) # SSE for model C
+sse_c
+
+coupons <- coupons |> 
+  mutate(mod_a_pred = mean_change,
+         mod_a_err = change - mod_a_pred)
+
+sse_a <- sum(coupons$mod_a_err^2) # SSE for model C
+sse_a
 ```
 
 #### 3f) Proportional reduction in error (PRE)
@@ -378,8 +417,13 @@ $$
 
 Based on this PRE, do you think Model C should be rejected in favor of Model A? (No formal test yet—explain your reasoning.)
 
+We should reject Model C in favor of Model A. While the sample size here is small, the PRE is .3025. This is a relatively large reduction in error for the model.
+
 ```{r}
 # Compute PRE from SSE(C) and SSE(A)
+
+PRE <- (sse_c - sse_a)/sse_c
+PRE
 ```
 
 #### 3g) Do it again using `stores.csv`
@@ -396,6 +440,23 @@ stores <- read_csv(here::here("data", "stores.csv"))
 # - SSE(C) where prediction is 0
 # - SSE(A) where prediction is mean(Change)
 # - PRE
+
+stores <- stores |> 
+  mutate(mod_c_pred = 0,
+         mod_c_err = Change - mod_c_pred)
+
+sse_c_2 <- sum(stores$mod_c_err^2) # SSE for model C
+sse_c_2
+
+stores <- stores |> 
+  mutate(mod_a_pred = mean(Change),
+         mod_a_err = Change - mod_a_pred)
+
+sse_a_2 <- sum(stores$mod_a_err^2) # SSE for model C
+sse_a_2
+
+PRE_2 <- (sse_c_2 - sse_a_2)/sse_c_2
+PRE_2
 ```
 
 ::: callout-tip
@@ -411,7 +472,12 @@ A convenient SSE pattern is:
 In your own words (**not** using the example from class):
 
 1.  Why is $\text{ERROR}(\text{Model A}) \le \text{ERROR}(\text{Model C})$?
-2.  What is a **degree of freedom**?
+
+The error for model A is always less than or equal to the error of model C because conditional models always have less error than unconditional models. Any information, such as the mean, allows us to make a better prediction than no information where we have to randomly guess.
+
+1.  What is a **degree of freedom**?
+
+A degree of freedom is the number of independent data points in a sample that can vary when estimating parameters. When you have an estimation (such as standard deviation or mean) and know all the data points besides one, the unknown data point can only be one number which produces the known estimation.
 
 ### 5) Sampling distributions and small samples
 
@@ -422,9 +488,18 @@ Visit the app:
 5a) Generate four or five iterations using a normally distributed population and samples of $n = 5$.
 
 -   Where do the sampling distributions of the mean peak?
+    -   The sampling distributions of the mean peak around 10 with slight variance.
 -   How much do the means and medians vary? What minimum and maximum values do you see for each?
+    -   The means and medians vary slightly. The medians vary more compared to the means. The minimum value for means is 9.94 and the maximum value is 10.22. The minimum value for the medians is 9.6 and the maximum value is 10.4.
+    -   Means: 10.14, 10.18, 9.94, 10.22, 10.03
+    -   Medians: 10.4, 9.7, 9.9, 10, 9.6
 
 5b) Answer the same questions for the mean using $n = 500$. (Rescale the histograms so you can see variability.)
+
+-   The sampling distributions of the mean peak around 10 with slight variance.
+-   The means and medians vary slightly. The medians vary more compared to the means. The minimum value for means is 9.94 and the maximum value is 10.22. The minimum value for the medians is 9.6 and the maximum value is 10.4.
+-   Means: 10.14, 10.18, 9.94, 10.22, 10.03
+-   Medians: 10.4, 9.7, 9.9, 10, 9.6
 
 ### 6) Central Limit Theorem intuition
 
