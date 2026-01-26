@@ -236,11 +236,11 @@ usnews <- read_csv(here::here("data", "USNEWS.csv"))
 # Create a compact summary table for gradRate and accptRate:
 # mean, median, mode, variance, sd, and n (non-missing)
 usnews <- usnews |>
-  drop_na(gradRate, accptRate) |>
   mutate(
     gradRate = as.numeric(gradRate),
     accptRate = as.numeric(accptRate)
-  )
+  ) |>
+  drop_na(gradRate, accptRate)
 
 gradRate_summary <- usnews |>
   summarize(mean_gradRate = mean(gradRate),
@@ -368,6 +368,8 @@ This model predicts that the change in cases sold is 0 for stores.
 
 Write it in the same form as class:
 
+Let $\Delta_i = \text{the change in the number of cases sold}$.
+
 $$
 \Delta_i = 0 + \varepsilon_i
 $$
@@ -378,7 +380,7 @@ $$
 
 #### 3c) Model A (best constant prediction from the data)
 
-This model predicts that the change in cases sold is equal to the average number of cases sold in this sample
+This model predicts the change in cases sold for our sample of stores.
 
 Specify a Model A with one parameter that makes the best possible constant prediction of `Change` based on the data.
 
@@ -394,7 +396,9 @@ $$
 
 State the null hypothesis tested by comparing Model C and Model A, and give a non-technical interpretation of what the comparison asks.
 
-The null hypothesis assumes there is no change in the number of cases sold when there are coupons. We are testing to see if the change in the number of cases sold is different from 0 (or there is change compared to no change).
+The null hypothesis assumes there is no change in the number of cases sold when there are coupons (Model C). We are testing to see if the change in the number of cases sold in our sample (Model A) is different from 0. In other words we are comparing the average change in our sample to a null hypothesis assuming there is no change in our sample and therefore the population.
+
+-   **Null hypothesis:** $H_0: b_0 = 0$
 
 #### 3e) Compute error for both models (SSE)
 
@@ -484,11 +488,11 @@ In your own words (**not** using the example from class):
 
 1.  Why is $\text{ERROR}(\text{Model A}) \le \text{ERROR}(\text{Model C})$?
 
-The error for model A is always less than or equal to the error of model C because conditional models always have less error than unconditional models. Any information, such as the mean, allows us to make a better prediction than no information where we have to randomly guess.
+The error for model A is always less than or equal to the error of model C because using a parameter to make an estimation is better than using a random guess. Any information, such as the mean, allows us to make a better prediction than no information where we have to randomly guess.
 
 1.  What is a **degree of freedom**?
 
-A degree of freedom is the number of independent data points in a sample that can vary when estimating parameters. When you have an estimation (such as standard deviation or mean) and know all the data points besides one, the unknown data point can only be one number which produces the known estimation.
+A degree of freedom is the number of independent data points in a sample that can vary when estimating parameters. When you have an estimation (such as mean) and know all the data points besides one, the unknown data point can only be one number which produces the known estimation.
 
 ### 5) Sampling distributions and small samples
 
