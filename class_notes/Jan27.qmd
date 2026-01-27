@@ -1,0 +1,69 @@
+---
+title: "Jan27"
+format: html
+editor: visual
+---
+
+Load packages
+
+```{r}
+library(gssr)
+library(gssrdoc)
+library(tidyverse)
+library(broom)
+theme_set(theme_minimal())
+```
+
+Load my saved data.
+
+```{r}
+gss2024 <- readRDS(file = here::here("data", "gss2024.RDS")) |>
+  haven::zap_labels()
+```
+
+Skewed working data.
+
+```{r}
+d <- gss2024 |>
+  select(tvhours) |>
+  drop_na()
+
+ggplot(d,
+       aes(x = tvhours)) +
+  geom_histogram(bins = 25,
+                 binwidth = 1,
+                 color = "white",
+                 fill = "gray")
+```
+
+```{r}
+get_sample_mean <- 
+```
+
+PRE and F Test
+
+Null hypothesis and null distribution
+
+Null hypothesis: the average American adult in 2024 watched 3 hours of tv per day.
+
+```{r}
+d <- d |>
+  mutate(tvhours_dev = tvhours - 3)
+
+model_c <- lm(tvhours_dev ~ 0, data = d)
+model_a <- lm(tvhours_dev ~ 1, data = d)
+
+summary(model_c)
+summary(model_a)
+
+sse_c <- deviance(model_c)
+sse_a <- deviance(model_a)
+pre <- (sse_c - sse_a) / sse_c
+pre
+```
+
+Construct a null distribution.
+
+```{r}
+
+```
