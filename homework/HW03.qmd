@@ -191,15 +191,13 @@ The army uses a PTSD test; scores above 37 indicate clinical levels of PTSD. A t
 
 1.  Specify MODEL C, MODEL A, and the null hypothesis.
 
--   **MODEL C (compact):** the reference value is 37 for this PTSD test. We can center our responses around 37 since we want to see if on average scores were greater or less than this reference value. I centered the model using: Let $\Delta_i = \text{PTSD}_i - 37$.
-
-    Let $\Delta_i = \text{PTSD}_i - 37$.\
-    $$\Delta_i = 0 + \varepsilon_i$$
+-   **MODEL C (compact):** the reference value is 37 for this PTSD test.\
+    $$PTSD_i = 37 + \varepsilon_i$$
 
 -   **MODEL A (augmented):** estimates the sample mean (one-parameter model). This estimates the average PTSD score for the troop of 43 soldiers.\
-    $$\Delta_i = b_0 + \varepsilon_i$$
+    $$PTSD_i = b_0 + \varepsilon_i$$
 
--   **Null hypothesis:** $H_0: b_0 = 0$, The null hypothesis is that soldiers will have an average score equal to 37.
+-   **Null hypothesis:** $H_0: b_0 = 37$, The null hypothesis is that soldiers will have an average score equal to 37.
 
 2.  State the number of parameters in MODEL C and MODEL A.
 
@@ -289,23 +287,21 @@ mydata |>
 
 Think of a question that can be tested with a MODEL C with **0 parameters** and a MODEL A that uses **1 parameter** to estimate central tendency. Write the research question in plain language.
 
-On average, do people tend to agree or disagree that teenagers should have access to birth control?
+On average, do people tend to agree (2) that methods of birth control should be available to teenagers between the ages of 14 and 16 if their parents do not approve?
 
 ### (c) Specify MODEL A, MODEL C, and the null hypothesis
 
 Write both a verbal description and a mathematical statement (use $\varepsilon_i$ for error).
 
--   **MODEL C (compact):** the reference value is 2 for this analysis. We can center our responses around 2 since we want to see if on average scores were greater or less than this reference value. I centered the model using: Let $\Delta_i = \text{BC}_i - 2$.
+-   **MODEL C (compact):** the reference value is agree (2) for this analysis.
 
-    Let $\Delta_i = \text{BC}_i - 2$.\
-    $$\Delta_i = 0 + \varepsilon_i$$
-
-<!-- -->
+    \
+    $$BC_i = 2 + \varepsilon_i$$
 
 -   **MODEL A (augmented):** estimates the sample mean (one-parameter model). This estimates the average response for individuals asked this question in the 2024 GSS.\
-    $$\Delta_i = b_0 + \varepsilon_i$$
+    $$BC_i = b_0 + \varepsilon_i$$
 
--   **Null hypothesis:** $H_0: b0 = 0$, The null hypothesis is that, on average, respondents neither lean toward agreement nor disagreement relative to ‘agree’.
+-   **Null hypothesis:** $H_0:b0 = 2$, The null hypothesis is that, on average, respondents tend to agree that methods of birth control should be available to teenagers between the ages of 14 and 16 if their parents do not approve.
 
 ### (d) Estimate both models with `lm()`
 
