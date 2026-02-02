@@ -36,10 +36,6 @@ ggplot(d,
                  fill = "gray")
 ```
 
-```{r}
-get_sample_mean <- 
-```
-
 PRE and F Test
 
 Null hypothesis and null distribution
@@ -50,8 +46,36 @@ Null hypothesis: the average American adult in 2024 watched 3 hours of tv per da
 d <- d |>
   mutate(tvhours_dev = tvhours - 3)
 
+ggplot(d,
+       aes(x = tvhours_dev)) +
+  geom_histogram(bins = 25,
+                 binwidth = 1,
+                 color = "white",
+                 fill = "gray") +
+  scale_x_continuous(breaks = seq(-3, 21,3))
+
 model_c <- lm(tvhours_dev ~ 0, data = d)
 model_a <- lm(tvhours_dev ~ 1, data = d)
+
+summary(model_c)
+summary(model_a)
+
+sse_c <- deviance(model_c)
+sse_a <- deviance(model_a)
+observed_pre <- (sse_c - sse_a) / sse_c
+observed_pre
+```
+
+A quick example...
+
+```{r}
+fake_data <- tibble(tvhours =rnorm(2152, mean = 3, sd = 3.3))
+
+fake_data <- fake_data |>
+  mutate(tvdev = tvhours - 3)
+
+model_c <- lm(tvdev ~ 0, data = fake_data)
+model_a <- lm(tvdev ~ 1, data = fake_data)
 
 summary(model_c)
 summary(model_a)
@@ -62,8 +86,54 @@ pre <- (sse_c - sse_a) / sse_c
 pre
 ```
 
-Construct a null distribution.
+Convert to function
 
 ```{r}
+calc_null_pre <- function(){
+  
+ null_data <- tibble(tvdev =rnorm(2152, 0, 3.3))
 
+model_c <- lm(tvdev ~ 0, data = null_data)
+model_a <- lm(tvdev ~ 1, data = null_data)
+
+summary(model_c)
+summary(model_a)
+
+sse_c <- deviance(model_c)
+sse_a <- deviance(model_a)
+pre <- (sse_c - sse_a) / sse_c
+pre
+}
+```
+
+Create a skeleton and append the null PRE simulations.
+
+```{r}
+null_sims <- tibble(sim_number = 1:1000) |>
+  rowwise() |>
+  mutate(pre = calc_null_pre())
+```
+
+Show how the observed PRE compared to the distribution of NULL PREs.
+
+Bootstrapped fstat not scaled
+
+```{r}
+ggplot (null_sims,
+           aes(x = pre)) +
+  geom_histogram() +
+  geom_vline(xintercept = observed_pre,
+             linetype = "dashed",
+             color = "red")
+
+quantile(null_sims$pre, c(.95, .99, 1)) #observed PRE is WAY above what we'd expect by chance
+```
+
+Based on the formula in the book, what F would that be equivalent to?
+
+How much is the number we picked than the average contribution of another parameter we could have used
+
+```{r}
+fstat <- (observed_pre / 1) / ((1 - observed_pre) / (nrow(d) - 1))
+fstat
 ```
