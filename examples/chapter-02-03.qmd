@@ -43,7 +43,6 @@ d <- gss2024 |>
   haven::zap_labels()
 ```
 
-
 Getting R to estimate "model C" (zero parameter guess)
 
 ```{r}
@@ -73,7 +72,6 @@ Estimate PRE.
 ```{r}
 (sse_c - sse_a) / sse_c
 ```
-
 
 Getting model C with lm(). First let's make a version of polviews "centered" on 4.
 
@@ -170,5 +168,3 @@ deviance(model3) # b0 and b1
 (deviance(mod_a) - deviance(model3)) / deviance(mod_a)
 
 ```
-
-
