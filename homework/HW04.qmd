@@ -1,7 +1,23 @@
 ---
-title: "Chapter 4 homework"
-format: html
-embed-resources: true
+title: "Chapter 4 Homework"
+author: "Kaylynn Hiller"
+date: "2026-02-02"
+mainfont: "Georgia"
+format: 
+  html: 
+    theme: cosmo
+    toc: true
+    embed-resources: true
+  pdf:
+    colorlinks: true
+    includes:
+      in-header:
+    keep-tex: false
+header-includes:
+  \usepackage{tabularray}
+  \usepackage{siunitx}
+execute: 
+  echo: false
 ---
 
 ```{r}
@@ -22,8 +38,13 @@ fitness <- read_csv(here("data", "fitness.csv"))
 
 Write brief answers.
 
-- What is a sampling distribution of a statistic (like a mean), and what is it useful for?
-- How can a sampling distribution be used to evaluate whether an observed value is “surprising” under a null hypothesis?
+-   What is a sampling distribution of a statistic (like a mean), and what is it useful for?
+
+    -   The sampling distribution is a theoretical distribution of taking repeated samples of a certain size from a population and calculating a statistic from those samples such as the mean. These are useful because we can compare a sample we have to the sampling distribution and make conclusions. We can use a sampling distribution to estimate whether a null hypothesis is likely true.
+
+-   How can a sampling distribution be used to evaluate whether an observed value is “surprising” under a null hypothesis?
+
+    -   A sampling distribution can be used to evaluate an observed value by comparing the observed value to the sampling distribution. If the observed value is higher or lower than the majority of the sampling distribution (such as 95% of the distribution) we can reject the null hypothesis. If the observed value is similar to the majority of the values in the sampling distribution we would fail to reject the null hypothesis.
 
 ## 2. Model comparison test: is the mean resting pulse 72?
 
@@ -33,11 +54,11 @@ Using the Fitness data, evaluate whether the sample of participants is consisten
 
 Use these models:
 
-- **Model C (null):** the outcome is fixed at 72 with no free parameters  
-  $$Y_i = 72 + \varepsilon_i.$$
+-   **Model C (null):** the outcome is fixed at 72 with no free parameters\
+    $$Y_i = 72 + \varepsilon_i.$$
 
-- **Model A (mean model):** estimate the mean from the data  
-  $$Y_i = b_0 + \varepsilon_i.$$
+-   **Model A (mean model):** estimate the mean from the data\
+    $$Y_i = b_0 + \varepsilon_i.$$
 
 ```{r}
 # Model C: fixed mean at 72 (no parameters)
@@ -46,6 +67,16 @@ Use these models:
 
 # Model A: estimate the mean (intercept-only model)
 # model_a <- ...
+
+fitness <- fitness |>
+  mutate (rstpulsedev = RSTPULSE - 72)
+
+model_c <- lm(rstpulsedev ~ 0, data = fitness)
+
+model_a <- lm(rstpulsedev ~ 1, data = fitness)
+
+summary(model_c)
+summary(model_a)
 ```
 
 ### 2b. Compute PRE and F
@@ -69,27 +100,42 @@ $$F^* = \frac{\text{PRE}/(P_A - P_C)}{(1-\text{PRE})/(n - P_A)}$$
 # pa <- ...
 
 # f_star <- ...
+
+sse_c <- deviance (model_c)
+sse_a <- deviance (model_a)
+
+pre <- (sse_c - sse_a)/sse_c
+
+n <- nrow(fitness)
+
+PC <- 0
+PA <- 1
+
+FSTAR <- (pre/(PA - PC)) / ((1 - pre)/(n - PA))
+FSTAR
 ```
 
 ### 2c. Identify “surprising” values from the book tables and/or by using `qf()`.
 
 Fill in the quantities the tables depend on:
 
-- number of participants:  n =
-- number of parameters in Model C:  $P_C$ =
-- number of parameters in Model A:  $P_A$ =
-- new parameters:  $P_A - P_C$ =
-- unused parameters (residual df for Model A):  $n - P_A$ =
+-   number of participants: n = 31
+-   number of parameters in Model C: $P_C$ = 0
+-   number of parameters in Model A: $P_A$ = 1
+-   new parameters: $P_A - P_C$ = 1
+-   unused parameters (residual df for Model A): $n - P_A$ = 30
 
 Then, using the book tables and/or `qf()`:
 
-- critical PRE at $\alpha = .05$:  PREcrit =
-- critical F at $\alpha = .05$:  Fcrit =
+-   critical PRE at $\alpha = .05$: PREcrit = .122
+-   critical F at $\alpha = .05$: Fcrit = 4.17
 
 ### 2d. Conclusions
 
-- Statistical conclusion: Do you reject or retain the null hypothesis at $\alpha = .05$? Explain using the logic of “surprising under the null.”
-- Substantive conclusion: Give a one-sentence interpretation in plain language.
+-   Statistical conclusion: Do you reject or retain the null hypothesis at $\alpha = .05$? Explain using the logic of “surprising under the null.”
+    -   We reject the null hypothesis. The f stat we calculated for this test was 150.2. This is larger than the critical value of 4.17. An f stat over a value of 4.17 would be surprising under the null since this means the observed sample mean is far from the null-hypothesized mean of 72. Since our fstat is high, our sample mean is very different from the estimated mean and the estimated difference is larger than a difference that would occur due to random error.
+-   Substantive conclusion: Give a one-sentence interpretation in plain language.
+    -   This sample of men has an average resting heart rate statistically different from the population mean of 72 beats per minute.
 
 ## 3. Alternative F formula using SSR and SSE(A)
 
@@ -104,19 +150,28 @@ $$F^* = \frac{\text{SSR}/(P_A - P_C)}{\text{SSE}(A)/(n - P_A)}$$
 ```{r}
 # ssr <- ...
 # f_star_ssr <- ...
+
+ssr <- sse_c - sse_a
+fstar <- (ssr/(PA - PC)) / (sse_a/(n - PA))
 ```
 
 ### 3b–3e. Interpretation
 
 Write brief answers.
 
-- What does the numerator $\text{SSR}/(P_A - P_C)$ represent?
-- What does the denominator $\text{SSE}(A)/(n - P_A)$ represent?
-- What does $F^*$ represent conceptually?
-- Compute $t$ for this $F^*$ (use the relationship between $t$ and $F$ when the numerator df is 1).
+-   What does the numerator $\text{SSR}/(P_A - P_C)$ represent?
+    -   This represents the mean squares reduced. This is the average proportional reduction in error per parameter added.
+-   What does the denominator $\text{SSE}(A)/(n - P_A)$ represent?
+    -   This represents the mean square error. This is the average proportional reduction in error that could be obtained by adding all possible remaining parameters.
+-   What does $F^*$ represent conceptually?
+    -   F represents the ratio of explained variance per added parameter to unexplained variance per unused parameter
+-   Compute $t$ for this $F^*$ (use the relationship between $t$ and $F$ when the numerator df is 1).
+    -   -12.25598
 
 ```{r}
 # t_star <- ...
+t_star <- sqrt(FSTAR)
+t_star
 ```
 
 ## 4. Does running increase pulse rate?
@@ -129,12 +184,12 @@ Use a model comparison where the null corresponds to **no mean change** from res
 
 One convenient approach:
 
-1. Create a difference score $D_i = \text{RUNPULSE}_i - \text{RSTPULSE}_i$.
-2. Compare:
-   - **Model C:** $D_i = 0 + \varepsilon_i$ (no free parameters)  
-     $$D_i = 0 + \varepsilon_i.$$
-   - **Model A:** $D_i = b_0 + \varepsilon_i$ (estimate the mean difference)  
-     $$D_i = b_0 + \varepsilon_i.$$
+1.  Create a difference score $D_i = \text{RUNPULSE}_i - \text{RSTPULSE}_i$.
+2.  Compare:
+    -   **Model C:** $D_i = 0 + \varepsilon_i$ (no free parameters)\
+        $$D_i = 0 + \varepsilon_i.$$
+    -   **Model A:** $D_i = b_0 + \varepsilon_i$ (estimate the mean difference)\
+        $$D_i = b_0 + \varepsilon_i.$$
 
 ```{r}
 # fitness <- fitness |>
@@ -142,6 +197,15 @@ One convenient approach:
 
 # model_c <- ...
 # model_a <- ...
+
+fitness <- fitness |>
+  mutate(d = RUNPULSE - RSTPULSE)
+
+model_c_2 <- lm(d ~ 0, data = fitness)
+model_a_2 <- lm(d ~ 1, data = fitness)
+
+summary(model_c_2)
+summary(model_a_2)
 ```
 
 ### 4b. Compute PRE and F, then compare to critical values
@@ -151,36 +215,80 @@ One convenient approach:
 # sse_a <- ...
 # pre <- ...
 # f_star <- ...
+
+sse_c_2 <- deviance(model_c_2)
+sse_a_2 <- deviance(model_a_2)
+
+pre_2 <- (sse_c_2 - sse_a_2)/sse_c_2
+
+FSTAR_2 <- (pre_2/(PA - PC)) / ((1 - pre_2)/(n - PA))
+FSTAR_2
 ```
 
 From the book tables at $\alpha=.05$:
 
-- PREcrit =
-- Fcrit =
+-   PREcrit = .122
+-   Fcrit = 4.17
 
 ### 4c. Conclusions
 
-- Statistical conclusion (reject/retain the null).
-- Substantive conclusion (plain-language interpretation).
+-   Statistical conclusion (reject/retain the null).
+    -   We reject the null hypothesis.
+-   Substantive conclusion (plain-language interpretation).
+    -   Our sample mean difference between resting and running heart rate is statistically much higher than the estimated difference of 0.
 
 ## 5. With your own data
 
-Return to your own dataset and the model comparison you set up previously. In this section, please use 
+Return to your own dataset and the model comparison you set up previously. In this section, please use
 
 ### 5a. Fit your models
 
 ```{r}
+gss2024 <- readRDS(file = here::here("data", "gss2024.rds"))
 
+mydata <- gss2024 |> 
+  select(pillok) |> 
+  drop_na() |> 
+  haven::zap_labels()
+
+mydata <- mydata |>
+   mutate(pill_dev = pillok - 2)
+
+ model_c_3 <- lm(pill_dev ~ 0, data = mydata)
+ model_a_3 <- lm(pill_dev ~ 1, data = mydata)
+
+summary(model_c_3)
+summary(model_a_3)
 ```
 
 ### 5b. Report PRE, F\*, and t\*
 
 ```{r}
+sse_c_3 <- deviance(model_c_3)
+sse_a_3 <- deviance(model_a_3)
 
+pre_3 <- (sse_c_3 - sse_a_3)/sse_c_3
+
+n3 <- nrow(mydata)
+
+PC3 <- 0
+PA3 <- 1
+
+FSTAR_3 <- (pre_3/(PA3 - PC3)) / ((1 - pre_3)/(n3 - PA3))
+FSTAR_3
+
+TSTAR_3 <- sqrt(FSTAR_3)
+TSTAR_3
 ```
 
 ### 5c. Use tables or functions to identify critical values and write conclusions
 
 ```{r}
+FCRIT <- qf(.95, 1, 2123)
+PVAL <- pf(FSTAR_3, 1, 2123, lower.tail = FALSE)
 
+FCRIT
+PVAL
 ```
+
+Our f stat (77.9) is much higher than the critical value of 3.85. Our p-value (2.239893e-18) is very small and essentially 0. This means that our sample is statically much different from our estimated value of 2. We reject the null hypothesis that the Americans on average agree (2) that teenagers should have access to birth control.
