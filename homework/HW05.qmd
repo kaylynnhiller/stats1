@@ -266,7 +266,7 @@ A researcher wonders whether people who go to the gym in January have above-norm
       summarize(mean_bmi = mean(bmi),
                 var_bmi  = var(bmi),
                 sd_bmi   = sd(bmi))
-    summary_stats_2
+    summary_stats2
 
     bmi_tibble <- bmi_tibble |>
       mutate(bmi_2 = (bmi - 24.9)^2)
@@ -369,29 +369,66 @@ t.test(fitness$RSTPULSE)$conf.int
 Write a complete summary:
 
 1.  briefly explain the data;
-    -   
+    -   The dataset `fitness.csv` contains resting pulse rate (`RSTPULSE`) for a sample of men.
 2.  set up the analysis (describe the comparison without using “Model A/C” language if you prefer);
-    -   
+    -   A commonly cited “normal” resting pulse rate for men is 72. We want to assess whether this sample looks consistent with that reference value.
 3.  report mean (and SD), test statistic ($t$ or $F$), PRE, $p$, and the confidence interval; and
-    -   
+    -   mean = 53.7
+    -   SD = 8.3
+    -   F = 150.2
+    -   PRE = 0.83
+    -   p = 3.3e-13
+    -   CI = 50.7 - 56.8
 4.  state statistical and substantive conclusions.
-    -   
+    -   Our results suggest we should reject the null hypothesis. This means that our sample of men has a statistically different resting heart rate than the commonly cited reference value of 72 in the population.
 
 ```{r}
+fitness <- fitness |>
+  mutate(rst_dev = RSTPULSE - 72)
 
+model_c3 <- lm(rst_dev ~ 0, data = fitness)
+model_a3 <- lm(rst_dev ~ 1, data = fitness)
+
+summary(model_c3)
+summary(model_a3)
+
+sse_c3 <- deviance(model_c3)
+sse_a3 <- deviance(model_a3)
+
+pre3 <- (sse_c3 - sse_a3) / sse_c3
+pre3
+
+fstat3 <- (pre3/(PA - PC)) / ((1 - pre3)/(n3 - PA))
+fstat3
+
+fcrit3 <- qf(.95, 1, 30)
+p3 <- pf(fstat3, 1, 30, lower.tail = FALSE)
+
+fcrit3
+p3
 ```
 
 ### B1c. Estimate of true PRE
 
 If you wanted to replicate this study, what would be your best guess for the *true* value of PRE?
 
+Using the unbiased formula, it would be 0.8381779.
+
 ```{r}
 
 ```
 
+```{r}
+df1 <- 1
+df2 <- n3 - df1 - 1
+
+PRE_unbiased <- (fstat3 * df1) / (fstat3 * df1 + df2)
+PRE_unbiased
+```
+
 ### B1d. Power for a replication at the same $n$
 
-Given your estimate of true PRE, if you replicated with the same sample size, what would be your power to detect the effect? Use `pwr.f2.test()`.
+Given your estimate of true PRE, if you replicated with the same sample size, what would be your power to detect the effect? Use `pwr.f2.test()`. The power would be low to detect this due to the small sample size.
 
 A common translation between PRE and Cohen's $f^2$ for this model-comparison setup is:
 
@@ -400,6 +437,20 @@ f^2 = \frac{\mathrm{PRE}}{1-\mathrm{PRE}}.
 $$
 
 ```{r}
+true_PRE3 <- 0.06  # conservative estimate for planning replication
+true_PRE3
+
+f2_true3 <- true_PRE3 / (1 - true_PRE3)
+f2_true3
+
+power_replication <- pwr.f2.test(
+  u = 1,
+  v = n3 - 2,
+  f2 = f2_true3,
+  sig.level = 0.05
+)
+
+power_replication
 
 ```
 
@@ -417,9 +468,26 @@ $$
 
 ### B2a. 95% CI for $b_0$ in Model A
 
-Construct a 95% CI for $b_0$ in your Model A for the change score. Do it by hand, then confirm with R.
+Construct a 95% CI for $b_0$ in your Model A for the change score. Do it by hand, then confirm with R. (111.8881 - 119.9184)
 
 ```{r}
+fitness <- fitness |>
+  mutate(pulse_change = RUNPULSE - RSTPULSE)
+
+summary_stats4 <- fitness |>
+  summarize(mean_plsc = mean(pulse_change),
+            var_plsc  = var(pulse_change),
+            sd_plsc   = sd(pulse_change))
+summary_stats4
+
+lower_bound4 <- summary_stats4$mean_plsc - (1.96*(summary_stats4$sd_plsc/sqrt(n3)))
+upper_bound4 <- summary_stats4$mean_plsc + (1.96*(summary_stats4$sd_plsc/sqrt(n3)))
+
+lower_bound4
+upper_bound4
+
+t.test(fitness$pulse_change)$conf.int
+
 
 ```
 
@@ -427,16 +495,44 @@ Construct a 95% CI for $b_0$ in your Model A for the change score. Do it by hand
 
 If you wanted to replicate this study, what would be your best guess for the true value of PRE?
 
-```{r}
+Using the unbiased formula, it would be 0.9917248.
 
+```{r}
+model_c4 <- lm(pulse_change ~ 0, data = fitness)
+model_a4 <- lm(pulse_change ~ 1, data = fitness)
+
+sse_c4 <- deviance(model_c)
+sse_a4 <- deviance(model_a)
+
+pre4 <- (sse_c4 - sse_a4)/sse_c4
+
+fstat4 <- (pre4/(PA - PC)) / ((1 - pre)/(n3 - PA))
+fstat4
+
+df1 <- 1
+df2 <- n3 - df1 - 1
+
+PRE_unbiased2 <- (fstat4 * df1) / (fstat4 * df1 + df2)
+PRE_unbiased2
 ```
 
 ### B2c. Required effect size for power = .80 at n = 100
 
 How big would true PRE need to be to yield power = .80 in a future study with $n=100$ participants? Use `pwr.f2.test()`.
 
-```{r}
+0.07412344
 
+```{r}
+f2_needed <- pwr.f2.test(
+  u = 1,
+  v = 98,
+  sig.level = 0.05,
+  power = 0.80
+)$f2
+
+f2_needed
+PRE_needed <- f2_needed / (1 + f2_needed)
+PRE_needed
 ```
 
 ------------------------------------------------------------------------
@@ -460,28 +556,60 @@ Here, **USS** (“uncorrected sum of squares”) represents squared error around
 Use this output to determine whether blood pressure significantly increased after oral contraceptives were begun.
 
 1.  Specify Models A & C (equations are encouraged).
+    -   $D_i = \text{BPBEFORE}_i - \text{BPAFTER}_i$.
+    -   **Model C:** $D_i = 0 + \varepsilon_i$ (no free parameters)
+    -   **Model A:** $D_i = b_0 + \varepsilon_i$ (estimate the mean difference)
 2.  Specify the null hypothesis.
+    -   $H_0: b_0 = 0$ there is no increase in blood pressure.
 3.  Calculate PRE and $F$.
+    -   F = 11.0533
+    -   PRE = 0.5511962
 4.  State your statistical and substantive one-sentence conclusions.
+    -   Due to the low p-value, we can conclude that there is a statistically significant change in blood pressure before and after taking oral contraceptives in this study.
 
 ```{r}
+fstat5 <- (3.3246511)^2
 
+df1 <- 1
+df2 <- 9
+
+PRE5 <- (fstat5 * df1) / (fstat5 * df1 + df2)
+PRE5
 ```
 
 ### B3b. Estimate of true PRE
 
 If you wanted to replicate this study, what would be your best guess for the true value of PRE?
 
-```{r}
+Using the unbiased formula, it would be 0.5801253.
 
+```{r}
+df1 <- 1
+df2 <- 10 - df1 - 1
+
+PRE_unbiased3 <- (fstat5 * df1) / (fstat5 * df1 + df2)
+PRE_unbiased3
 ```
 
 ### B3c. Sample size for power targets
 
 What sample size would you need to achieve power = .80? What sample size would you need to achieve power = .90? Use `pwr.f2.test()`.
 
-```{r}
+1.  n = 125
+2.  n = 167
 
+```{r}
+f2 <- 0.0638
+u <- 1
+sig.level <- 0.05
+
+sample_80 <- pwr.f2.test(u = u, f2 = f2, sig.level = sig.level, power = 0.80)
+n_80 <- ceiling(sample_80$v + u + 1)  # convert v to n
+n_80
+
+sample_90 <- pwr.f2.test(u = u, f2 = f2, sig.level = sig.level, power = 0.90)
+n_90 <- ceiling(sample_90$v + u + 1)  # convert v to n
+n_90
 ```
 
 ------------------------------------------------------------------------
@@ -503,16 +631,26 @@ If the true difference corresponds to what the text refers to as a “moderate�
 2.  Verify using `pwr` (it will not match exactly, but should be close).
 
 ```{r}
+Fcrit <- qf(0.95, 1, 23)
+Fcrit
 
+lambda <- 1.4375
+power_book <- 1 - pf(Fcrit, 1, 23, ncp = lambda)
+power_book
+
+f2 <- 0.0625
+u <- 1
+v <- 24 - u - 1
+
+power_pwr <- pwr.f2.test(u = u, v = v, f2 = f2, sig.level = 0.05)$power
+power_pwr
 ```
 
 ### B4b. Two ways to increase power without increasing n
 
 Given that they cannot admit additional students, state two things they could do to increase power.
 
-```{r}
-
-```
+The could reduce error or increase alpha.
 
 ### B4c. Try-out question: setting up a conditional model comparison
 
@@ -521,7 +659,11 @@ The committee wants to know whether GRE-Verbal, GRE-Math, and undergraduate GPA 
 We have not yet learned how to *test* these conditional models, but set up the comparison:
 
 -   Model C: predicts the mean
+    -   **Model C:** $FYGPA_i = b_0 + \varepsilon_i$
 -   Model A: predicts GPA conditionally using all 3 predictors
+    -   **Model C:** $FYGPA_i = b_0 + b_1 , \text{GRE\_Verbal}_i + b_2 , \text{GRE\_Math}_i + b_3 , \text{UGPA}_i + \varepsilon_i$
+    -   $n - P_A$ = 20
+    -   $P_A - P_C$ = 3
 
 Specify both models and indicate $n - P_A$ and $P_A - P_C$ for this comparison.
 
@@ -539,13 +681,66 @@ These questions refer to the model comparison you tested previously using your o
 
 Identify the 95% confidence interval for $b_0$ in Model A. Explain what this interval represents.
 
-```{r}
+(2.155336 - 2.244099)
 
+This is where in a normal distribution based on our standard deviation and mean from the sample where 95% of our data would lie.
+
+```{r}
+gss2024 <- readRDS(file = here::here("data", "gss2024.rds"))
+
+mydata <- gss2024 |> 
+  select(pillok) |> 
+  drop_na() |> 
+  haven::zap_labels()
+
+mydata <- mydata |>
+   mutate(pill_dev = pillok - 2)
+
+ model_c6 <- lm(pill_dev ~ 0, data = mydata)
+ model_a6 <- lm(pill_dev ~ 1, data = mydata)
+
+summary(model_c6)
+summary(model_a6)
+
+t.test(mydata$pillok)$conf.int
+
+sse_c6 <- deviance(model_c6)
+sse_a6 <- deviance(model_a6)
+
+pre6 <- (sse_c6 - sse_a6) / sse_c6
+pre6
+
+n6<- nrow(mydata)
+fstat6 <- (pre6/(PA - PC)) / ((1 - pre6)/(n6 - PA))
+fstat6
+
+fcrit6 <- qf(.95, 1, 2123)
+qf(.95, 1, 99)
+
+qpre <- function(p,
+                 df1,
+                 df2) {
+  
+  f <- qf(p = p,
+          df1 = df1,
+          df2 = df2)
+  
+  crit_pre <- f / (f + df2/df1)
+  
+  return(crit_pre)
+  
+}
+
+PRE_crit <- qpre(p = .95, df1 = 1, df2 = 2122)
+
+p6 <- pf(fstat6, 1, 2123, lower.tail = FALSE)
 ```
 
 ## C2. Journal-style summary
 
 Write a complete journal-style summary for your data.
+
+Due to our p-value, we reject the null hypothesis that the average response to this question was 2.
 
 ```{r}
 
@@ -556,15 +751,33 @@ Write a complete journal-style summary for your data.
 If you wanted to replicate this study, what would be your best guess for the true value of PRE?
 
 ```{r}
+df1 <- 1
+df2 <- 2123 - df1 - 1
 
+PRE_unbiased6 <- (fstat6 * df1) / (fstat6 * df1 + df2)
+PRE_unbiased6
 ```
 
 ## C4. Sample size for power = .80
 
 Given your estimate of true PRE, what sample size would you need to achieve power = .80? Use `pwr.f2.test()`.
 
-```{r}
+216
 
+```{r}
+f2 <- PRE_unbiased6 / (1 - PRE_unbiased6)
+f2
+
+u <- 1                 
+f2 <- PRE_unbiased6 / (1 - PRE_unbiased6)
+sig.level <- 0.05
+power <- 0.80
+
+result <- pwr.f2.test(u = u, v = NULL, f2 = f2, sig.level = sig.level, power = power)
+result
+
+n_required <- result$v + u + 1
+n_required
 ```
 
 ## C5. Sketch the PRE distributions
@@ -572,5 +785,45 @@ Given your estimate of true PRE, what sample size would you need to achieve powe
 Draw a chart that shows the distribution of PRE under both the $H_0$ and $H_1$ hypotheses. Label $\alpha$, $\beta$, power, and the surprise point.
 
 ```{r}
+library(ggplot2)
 
+PRE_obs <- pre6           # observed PRE
+PRE_true <- PRE_unbiased6 # estimated true PRE
+sd_pre <- 0.02            # approximate spread
+alpha <- 0.05
+
+# Grid of PRE values
+pre_values <- seq(-0.02, 0.15, length.out = 500)
+
+# Density under H0
+dens_H0 <- dnorm(pre_values, mean = 0, sd = sd_pre)
+df_H0 <- data.frame(PRE = pre_values, Density = dens_H0)
+
+# Density under H1
+dens_H1 <- dnorm(pre_values, mean = PRE_true, sd = sd_pre)
+df_H1 <- data.frame(PRE = pre_values, Density = dens_H1)
+
+# --- H0 plot ---
+plot_H0 <- ggplot(df_H0, aes(x = PRE, y = Density)) +
+  geom_line(color = "black", size = 1.2) +
+  geom_vline(xintercept = PRE_crit, linetype = "dashed", color = "red") +
+  labs(title = "PRE Distribution under H0",
+       x = "PRE", y = "Density") +
+  annotate("text", x = PRE_crit + 0.002, y = max(dens_H0), label = "alpha", color = "red") +
+  theme_minimal()
+
+# --- H1 plot ---
+plot_H1 <- ggplot(df_H1, aes(x = PRE, y = Density)) +
+  geom_line(color = "blue", size = 1.2) +
+  geom_vline(xintercept = PRE_crit, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = PRE_obs, linetype = "dotted", color = "purple") +
+  labs(title = "PRE Distribution under H1",
+       x = "PRE", y = "Density") +
+  annotate("text", x = PRE_crit + 0.002, y = max(dens_H1), label = "Power region", color = "darkgreen") +
+  annotate("text", x = PRE_obs, y = max(dens_H1), label = "Observed PRE", color = "purple", vjust = -0.5) +
+  theme_minimal()
+
+# --- Display plots ---
+plot_H0
+plot_H1
 ```
