@@ -1,0 +1,576 @@
+---
+title: "Chapter 5 Homework"
+author: "Kaylynn Hiller"
+date: "2026-02-09"
+mainfont: "Georgia"
+format: 
+  html: 
+    theme: cosmo
+    toc: true
+    embed-resources: true
+  pdf:
+    colorlinks: true
+    includes:
+      in-header:
+    keep-tex: false
+header-includes:
+  \usepackage{tabularray}
+  \usepackage{siunitx}
+execute: 
+  echo: false
+---
+
+## Setup
+
+```{r}
+# If you don't have a package yet, install it once:
+#install.packages(c("tidyverse", "here", "broom", "pwr", "psych"))
+
+library(tidyverse)
+library(here)
+library(broom)
+library(pwr)
+library(psych)
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## General notes on the model-comparison workflow
+
+For most questions below, you will compare:
+
+-   **Model C (constrained / null model)**: a model where the intercept is fixed (often to 0 or to a known/reference value).
+-   **Model A (augmented model)**: a model where the intercept is estimated from the data.
+
+For a one-parameter intercept-only Model A,
+
+$$
+\text{Model A: } Y_i = b_0 + \varepsilon_i
+$$
+
+and for a fixed-intercept Model C (often $b_0$ fixed to some value $c$),
+
+$$
+\text{Model C: } Y_i = c + \varepsilon_i.
+$$
+
+The key quantities:
+
+-   $\mathrm{SSE}$ is sum of squared errors.
+-   $\mathrm{PRE} = \dfrac{\mathrm{SSE}_C - \mathrm{SSE}_A}{\mathrm{SSE}_C}$.
+-   For a one-parameter comparison (typically $P_A - P_C = 1$), the usual model-comparison $F$ statistic is:
+
+$$
+F = \frac{(\mathrm{SSE}_C - \mathrm{SSE}_A)/(P_A - P_C)}{\mathrm{SSE}_A/(n - P_A)}.
+$$
+
+------------------------------------------------------------------------
+
+# Part A: Hand-calculation practice (small, self-contained datasets)
+
+## A1. Schizophrenia age of onset
+
+Assume the mean age of onset of schizophrenia in a sample of $n=50$ persons was $\bar{y} = 21.5$ years and the variance was $s^2 = 2.5$ (years$^2$).
+
+1.  Specify the model that uses the mean to describe the data (Model A), in both words and in equation form.
+
+    -   $$
+        \text{Model A: } Y_i = b_0 + \varepsilon_i
+        $$
+
+    <!-- -->
+
+    -   **Model A (mean model):** estimate the mean from the data
+
+2.  What is the $\mathrm{SSE}$ for this model?
+
+    -   $SSE = s^2 *(n-1)$
+    -   122.5
+
+*(Use the definitional relationships between variance, sums of squares, and SSE for an intercept-only model.)*
+
+```{r}
+2.5*(50-1)
+
+```
+
+------------------------------------------------------------------------
+
+## A2. Multiculturalism vs. colorblindness (paired data)
+
+Ryan, Hunt, Weible, Peterson, and Casas (2007) investigated Americans’ interethnic ideologies. They asked college students to indicate the extent to which they believed that multiculturalism and colorblind ideologies would improve interethnic relations in the U.S.
+
+Assume you have data for 10 Black participants:
+
+| Subjid |  MC |  CB | Diff (MC − CB) |
+|-------:|----:|----:|---------------:|
+|      1 | 5.0 | 4.0 |            1.0 |
+|      2 | 4.0 | 3.5 |            0.5 |
+|      3 | 6.0 | 4.0 |            2.0 |
+|      4 | 6.0 | 6.0 |            0.0 |
+|      5 | 5.0 | 4.5 |            0.5 |
+|      6 | 4.5 | 5.0 |           -0.5 |
+|      7 | 5.0 | 3.0 |            2.0 |
+|      8 | 6.5 | 4.5 |            2.0 |
+|      9 | 7.0 | 5.0 |            2.0 |
+|     10 | 6.5 | 3.0 |            3.5 |
+
+### A2a. By hand
+
+1.  Compute **by hand** the mean, variance, and standard deviation of the difference variable. Use definitional formulas.
+    -   mean = 1.3
+    -   variance = 1.46
+    -   standard deviation = 1.21
+2.  Compute $\mathrm{SSE}_C$ for the simple model that predicts no difference (i.e., that the difference is 0). This is Model C.
+    -   30
+3.  Compute $\mathrm{SSE}_A$ for the simple model that best describes the differences based on the data (Model A).
+    -   $SSE=s^2∗(n−1)$ = 1.46\*(10-1) = 13.1
+4.  Compute PRE and $F$.
+    -   PRE = 0.563
+    -   F = 11.61
+5.  Specify the null hypothesis tested by comparing these two models.
+    -   the null hypothesis is that there is no difference in the two ideologies
+    -    $H_0: b_0 = 0$
+6.  Indicate whether you would reject or fail to reject Model C / the null hypothesis.
+    -   We would reject the null hypothesis since our values of PRE and F are greater than the critical values of PRE and F at 95% significance and a 99% significance.
+7.  Write up your findings in journal style.
+    -   Our findings indicate that there is likely a difference in how these participants viewed how multiculturalism and colorblind ideologies would improve interethnic relations in the U.S.
+
+*(You can optionally use R at the end to check arithmetic, but do the main work by hand.)*
+
+```{r}
+diff_tibble <- tibble(
+  subjid = c(1:10),
+  diff = c(1,.5,2,0,.5,-.5,2,2,2,3.5)
+)
+
+summary_stats <- diff_tibble |>
+  summarize(mean_diff = mean(diff),
+            var_diff  = var(diff),
+            sd_diff   = sd(diff))
+summary_stats
+
+diff_tibble <- diff_tibble |>
+  mutate(diff_2 = (diff)^2)
+
+SSE_C <- sum(diff_tibble$diff_2)
+  
+SSE_A <- summary_stats$var_diff * 9
+
+PRE <- (SSE_C - SSE_A)/SSE_C
+
+PC <- 0
+PA <- 1
+
+n <- nrow(diff_tibble)
+
+FSTAT <- (PRE/(PA - PC)) / ((1 - PRE)/(n - PA))
+FSTAT
+```
+
+### A2b. In R (reproducing your values)
+
+Recreate the analysis in R and verify the quantities above (mean, variance/SD, $\mathrm{SSE}_C$, $\mathrm{SSE}_A$, PRE, $F$, and $p$).
+
+```{r}
+model_c <- lm(diff ~ 0, data = diff_tibble)
+
+model_a <- lm(diff ~ 1, data = diff_tibble)
+
+sse_c <- deviance(model_c)
+sse_a <- deviance(model_a)
+
+pre <- (sse_c - sse_a)/sse_c
+
+n <- nrow(diff_tibble)
+
+fstat <- (pre/(PA - PC)) / ((1 - pre)/(n - PA))
+fstat
+
+p <- pf(fstat, 1, 9, lower.tail = FALSE)
+```
+
+### A2c. Confidence interval
+
+Construct a 95% confidence interval for the multiculturalism − colorblindness difference score in this sample.
+
+-   0.55 - 2.05
+
+```{r}
+lower_bound <- summary_stats$mean_diff - (1.96*(summary_stats$sd_diff/sqrt(n)))
+upper_bound <- summary_stats$mean_diff + (1.96*(summary_stats$sd_diff/sqrt(n)))
+```
+
+### A2d. Power planning with `pwr`
+
+A researcher wants to replicate the finding with a new sample of 10 participants.
+
+1.  Use results from this sample and the `pwr` package to estimate the number of participants needed to replicate your observed effect (at $\alpha = .05$).
+    -   10 participants (5 in each group)
+2.  Use the same package to estimate the number of participants needed to detect a **medium** effect size (according to Cohen's very arbitrary definition...).
+    -   128 participants (64 in each group)
+
+```{r}
+f <- sqrt(PRE / (1 - PRE))
+f
+pwr.anova.test(
+  k = 2,
+  f = f,
+  sig.level = 0.05,
+  power = 0.80
+)
+
+pwr.anova.test(
+  k = 2,
+  f = 0.25,
+  sig.level = 0.05,
+  power = 0.80
+)
+```
+
+------------------------------------------------------------------------
+
+## A3. Gym BMI (one-sample mean test)
+
+A researcher wonders whether people who go to the gym in January have above-normal BMIs, that is, above 24.9 (upper level of “normal,” according to the CDC). She obtains the BMI scores below for a randomly selected group of 10 gym users:
+
+| Participant |  BMI |
+|------------:|-----:|
+|           1 | 24.0 |
+|           2 | 27.0 |
+|           3 | 25.0 |
+|           4 | 27.0 |
+|           5 | 27.0 |
+|           6 | 23.0 |
+|           7 | 22.0 |
+|           8 | 30.0 |
+|           9 | 26.0 |
+|          10 | 29.0 |
+
+1.  Specify Models C and A and the null hypothesis for this statistical test. What is this test commonly called?
+
+    -   Model C: $$\text{BMI}_i = 24.9 + \varepsilon_i$$
+    -   Model A: $$\text{BMI}_i = b_0 + \varepsilon_i$$
+    -   **Null hypothesis:** $H_0: b_0 = 24.9$
+    -   One sample t-test
+
+2.  Conduct the analysis **by hand**.
+
+    ```{r}
+    bmi_tibble <- tibble(
+      id = c(1:10),
+      bmi = c(24,27,25,27,27,23,22,30,26,29)
+    )
+
+    summary_stats2 <- bmi_tibble |>
+      summarize(mean_bmi = mean(bmi),
+                var_bmi  = var(bmi),
+                sd_bmi   = sd(bmi))
+    summary_stats_2
+
+    bmi_tibble <- bmi_tibble |>
+      mutate(bmi_2 = (bmi - 24.9)^2)
+
+    SSE_C2 <- sum(bmi_tibble$bmi_2)
+      
+    SSE_A2 <- summary_stats2$var_bmi * 9
+
+    PRE2 <- (SSE_C2 - SSE_A2)/SSE_C2
+
+    n2 <- nrow(bmi_tibble)
+
+    FSTAT2 <- (PRE2/(PA - PC)) / ((1 - PRE2)/(n2 - PA))
+    FSTAT2
+    ```
+
+3.  Conduct the analysis in R.
+
+4.  Provide a statistical conclusion.
+
+    -   We fail to reject the null hypothesis.
+
+5.  Write up your findings in journal style.
+
+    -   Our findings indicate that there is likely a no difference in the bmi of this sample compared to the upper end of the bmi normal score of 24.9.
+
+```{r}
+bmi_tibble <- bmi_tibble |>
+  mutate(bmi_dev = bmi - 24.9)
+model_c2 <- lm(bmi_dev ~ 0, data = bmi_tibble)
+
+model_a2 <- lm(bmi_dev ~ 1, data = bmi_tibble)
+
+sse_c2 <- deviance(model_c2)
+sse_a2 <- deviance(model_a2)
+
+pre2 <- (sse_c2 - sse_a2)/sse_c2
+
+n2 <- nrow(bmi_tibble)
+
+fstat2 <- (pre2/(PA - PC)) / ((1 - pre2)/(n2 - PA))
+fstat2
+
+p2 <- pf(fstat2, 1, 9, lower.tail = FALSE)
+```
+
+------------------------------------------------------------------------
+
+# Part B: Fitness dataset (model comparison, confidence intervals, power)
+
+## B0. Read the data
+
+Read in the `fitness.csv` dataset from the course project `data/` folder.
+
+```{r}
+fitness <- read_csv(here("data", "fitness.csv"))
+```
+
+------------------------------------------------------------------------
+
+## B1. Resting pulse vs. “normal” (72 bpm)
+
+The variable `RSTPULSE` contains resting pulse rate for each participant in the fitness study. The normal pulse rate for men is 72.
+
+### B1a. 95% CI for $b_0$ in Model A
+
+Construct a 95% confidence interval for $b_0$ in Model A.
+
+-   Do this **by hand** using a critical value (e.g., $t_{\alpha/2, \, df}$), and then confirm with R.
+    -   50.8 - 56.7
+    -   50.69951 - 56.78436 (difference due to rounding)
+
+```{r}
+summary_stats3 <- fitness |>
+  summarize(mean_pls = mean(RSTPULSE),
+            var_pls  = var(RSTPULSE),
+            sd_pls   = sd(RSTPULSE))
+summary_stats3
+
+n3 <- nrow(fitness)
+
+lower_bound3 <- summary_stats3$mean_pls - (1.96*(summary_stats3$sd_pls/sqrt(n3)))
+upper_bound3 <- summary_stats3$mean_pls + (1.96*(summary_stats3$sd_pls/sqrt(n3)))
+```
+
+-   Make note of what in R output corresponds to your hand calculation.
+
+For reference, the by-hand CI for an intercept estimate is:
+
+$$
+\hat{b}_0 \pm t_{\alpha/2, \, df} \cdot SE(\hat{b}_0).
+$$
+
+```{r}
+t.test(fitness$RSTPULSE)$conf.int
+```
+
+### B1b. Journal-style summary
+
+Write a complete summary:
+
+1.  briefly explain the data;
+    -   
+2.  set up the analysis (describe the comparison without using “Model A/C” language if you prefer);
+    -   
+3.  report mean (and SD), test statistic ($t$ or $F$), PRE, $p$, and the confidence interval; and
+    -   
+4.  state statistical and substantive conclusions.
+    -   
+
+```{r}
+
+```
+
+### B1c. Estimate of true PRE
+
+If you wanted to replicate this study, what would be your best guess for the *true* value of PRE?
+
+```{r}
+
+```
+
+### B1d. Power for a replication at the same $n$
+
+Given your estimate of true PRE, if you replicated with the same sample size, what would be your power to detect the effect? Use `pwr.f2.test()`.
+
+A common translation between PRE and Cohen's $f^2$ for this model-comparison setup is:
+
+$$
+f^2 = \frac{\mathrm{PRE}}{1-\mathrm{PRE}}.
+$$
+
+```{r}
+
+```
+
+------------------------------------------------------------------------
+
+## B2. Did running increase pulse rate? (within-person change)
+
+Using the same dataset, compare resting pulse (`RSTPULSE`) to post-run pulse (`RUNPULSE`). Did running increase pulse rate?
+
+Hint: create a new variable such as:
+
+$$
+\text{change} = \text{RUNPULSE} - \text{RSTPULSE}.
+$$
+
+### B2a. 95% CI for $b_0$ in Model A
+
+Construct a 95% CI for $b_0$ in your Model A for the change score. Do it by hand, then confirm with R.
+
+```{r}
+
+```
+
+### B2b. Estimate of true PRE
+
+If you wanted to replicate this study, what would be your best guess for the true value of PRE?
+
+```{r}
+
+```
+
+### B2c. Required effect size for power = .80 at n = 100
+
+How big would true PRE need to be to yield power = .80 in a future study with $n=100$ participants? Use `pwr.f2.test()`.
+
+```{r}
+
+```
+
+------------------------------------------------------------------------
+
+## B3. Oral contraceptives and systolic blood pressure (Rosner example)
+
+Ten women are studied to determine if oral contraceptives increase systolic blood pressure (mm Hg). Baseline blood pressure is measured before and then again several months after oral contraceptives are started. The following **changes** in systolic blood pressure are observed:
+
+13, 3, -1, 9, 7, 7, 6, 4, -2, 2
+
+A summary table (from SAS) reports:
+
+|      Mean |   Std Dev |         USS |         CSS |         T | Prob \> |
+|----------:|----------:|------------:|------------:|----------:|--------:|
+| 4.8000000 | 4.5655716 | 418.0000000 | 187.6000000 | 3.3246511 |  0.0089 |
+
+Here, **USS** (“uncorrected sum of squares”) represents squared error around the model $Y_i = 0 + \varepsilon_i$ (i.e., Model C with intercept fixed at 0). **CSS** (“corrected sums of squares”) represents squared error around $Y_i = b_0 + \varepsilon_i$ (Model A with estimated intercept).
+
+### B3a. Interpret the output using model comparison
+
+Use this output to determine whether blood pressure significantly increased after oral contraceptives were begun.
+
+1.  Specify Models A & C (equations are encouraged).
+2.  Specify the null hypothesis.
+3.  Calculate PRE and $F$.
+4.  State your statistical and substantive one-sentence conclusions.
+
+```{r}
+
+```
+
+### B3b. Estimate of true PRE
+
+If you wanted to replicate this study, what would be your best guess for the true value of PRE?
+
+```{r}
+
+```
+
+### B3c. Sample size for power targets
+
+What sample size would you need to achieve power = .80? What sample size would you need to achieve power = .90? Use `pwr.f2.test()`.
+
+```{r}
+
+```
+
+------------------------------------------------------------------------
+
+## B4. Power and design choices (GPA example)
+
+In a particular year, a graduate program admitted 24 new students. The admissions committee wants to interpret the students’ first-year GPA.
+
+### B4a. Approximate power for a “moderate” effect
+
+Graduate students in this program are required to maintain a 3.0 average. The committee plans to compare:
+
+-   Model C: GPA fixed at 3.0
+-   Model A: GPA estimated as the students’ mean
+
+If the true difference corresponds to what the text refers to as a “moderate” effect in the social sciences, what are the chances that the committee will correctly conclude Model A is better than Model C if they use $\alpha = .05$?
+
+1.  Calculate approximate power using the book approach.
+2.  Verify using `pwr` (it will not match exactly, but should be close).
+
+```{r}
+
+```
+
+### B4b. Two ways to increase power without increasing n
+
+Given that they cannot admit additional students, state two things they could do to increase power.
+
+```{r}
+
+```
+
+### B4c. Try-out question: setting up a conditional model comparison
+
+The committee wants to know whether GRE-Verbal, GRE-Math, and undergraduate GPA are useful predictors of first-year GPA.
+
+We have not yet learned how to *test* these conditional models, but set up the comparison:
+
+-   Model C: predicts the mean
+-   Model A: predicts GPA conditionally using all 3 predictors
+
+Specify both models and indicate $n - P_A$ and $P_A - P_C$ for this comparison.
+
+```{r}
+
+```
+
+------------------------------------------------------------------------
+
+# Part C: Your own data (leave code blocks empty)
+
+These questions refer to the model comparison you tested previously using your own dataset.
+
+## C1. Confidence interval for $b_0$
+
+Identify the 95% confidence interval for $b_0$ in Model A. Explain what this interval represents.
+
+```{r}
+
+```
+
+## C2. Journal-style summary
+
+Write a complete journal-style summary for your data.
+
+```{r}
+
+```
+
+## C3. Estimate of true PRE
+
+If you wanted to replicate this study, what would be your best guess for the true value of PRE?
+
+```{r}
+
+```
+
+## C4. Sample size for power = .80
+
+Given your estimate of true PRE, what sample size would you need to achieve power = .80? Use `pwr.f2.test()`.
+
+```{r}
+
+```
+
+## C5. Sketch the PRE distributions
+
+Draw a chart that shows the distribution of PRE under both the $H_0$ and $H_1$ hypotheses. Label $\alpha$, $\beta$, power, and the surprise point.
+
+```{r}
+
+```

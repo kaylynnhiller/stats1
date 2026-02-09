@@ -1,0 +1,52 @@
+---
+title: "Feb3"
+format: html
+editor: visual
+---
+
+Load packages
+
+```{r}
+library(gssr)
+library(gssrdoc)
+library(tidyverse)
+library(broom)
+theme_set(theme_light())
+```
+
+Computing PRE Warm-Up
+```{r}
+qf(.95, 1, 99)
+
+qpre <- function(p,
+                 df1,
+                 df2) {
+  
+  
+  f <- qf(p = p,
+     df1 = df1,
+     df2 = df2)
+  
+  crit_pre <- f / (f + df2/df1)
+  
+  return(crit_pre)
+  
+}
+
+qpre(p = .95, df1 = 1, df2 = 99)
+```
+
+Get GSS panel data the first time (then comment out.)
+
+```{r}
+#data("gss_panel10_long")
+#saveRDS(gss_panel10_long, file = here::here("data", "gss_panel10_long.rds"))
+```
+
+Load saved GSS data.
+
+```{r}
+
+```
+
+
