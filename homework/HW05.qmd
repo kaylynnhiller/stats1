@@ -130,7 +130,7 @@ Assume you have data for 10 Black participants:
     -   F = 11.61
 5.  Specify the null hypothesis tested by comparing these two models.
     -   the null hypothesis is that there is no difference in the two ideologies
-    -    $H_0: b_0 = 0$
+    -   $H_0: b_0 = 0$
 6.  Indicate whether you would reject or fail to reject Model C / the null hypothesis.
     -   We would reject the null hypothesis since our values of PRE and F are greater than the critical values of PRE and F at 95% significance and a 99% significance.
 7.  Write up your findings in journal style.

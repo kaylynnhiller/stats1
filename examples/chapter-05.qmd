@@ -65,7 +65,6 @@ power.anova.test(groups = groups,
                  power = .8)
 ```
 
-
 ```{r}
 get_pow <- function(n) {
   tmp <- power.anova.test(groups = groups,
@@ -96,7 +95,6 @@ plt(power ~ n,
     type = "l")
 
 ```
-
 
 ## Effect sizes
 
