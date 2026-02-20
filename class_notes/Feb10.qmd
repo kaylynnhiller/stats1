@@ -1,0 +1,31 @@
+---
+title: "Feb3"
+format: html
+editor: visual
+---
+
+Load packages
+
+```{r}
+library(gssr)
+library(gssrdoc)
+library(tidyverse)
+library(broom)
+library(dplyr)
+library(stringr)
+library(modelsummary)
+library(tinyplot)
+theme_set(theme_light())
+```
+
+ttest is a two group comparison
+
+```{r}
+states <- bind_cols(state.x77, region = state.division) |>
+  janitor::clean_names() |>
+  mutate(south = as.integer(
+    str_detect(as.character(region),
+               "South")))
+```
+
+We can write:

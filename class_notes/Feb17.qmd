@@ -1,0 +1,19 @@
+---
+title: "Feb17"
+format: html
+editor: visual
+---
+
+Load packages
+
+```{r}
+library(gssr)
+library(gssrdoc)
+library(tidyverse)
+library(broom)
+library(dplyr)
+library(stringr)
+library(modelsummary)
+library(tinyplot)
+theme_set(theme_light())
+```

@@ -1,0 +1,55 @@
+---
+title: "Feb3"
+format: html
+editor: visual
+---
+
+Load packages
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(broom)
+library(stringr)
+library(modelsummary)
+library(tinyplot)
+
+tinytheme("ipsum",
+          family = "Roboto Condensed",
+          palette.qualitative = "Tableau 10",
+          palette.sequential = "agSunset")
+```
+
+ttest is a two group comparison
+
+```{r}
+state.x77_with_names <- as_tibble(state.x77,
+                                  rownames = "state")
+
+states <- bind_cols(state.x77_with_names
+                    , region = state.division) |>
+  janitor::clean_names() |>
+  mutate(south = as.integer(
+    str_detect(as.character(region),
+               "South")))
+```
+
+Estimate the models.
+
+```{r}
+mc <- lm(life_exp ~ 1, data = states)
+ma <- lm(life_exp ~ 1+ hs_grad, data = states)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+
+msummary(list("MC" = mc, 
+              "MA" = ma),
+         fmt = 3,
+         estimate = "{estimate} ({std.error})",
+         statistic = NULL,
+         gof_map = c("nobs", "F", "r.squared"))
+
+```
