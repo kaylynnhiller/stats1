@@ -1,8 +1,23 @@
 ---
-title: "Chapter 6 homework"
-format:
-  html:
+title: "Chapter 6 Homework"
+author: "Kaylynn Hiller"
+date: "2026-02-23"
+mainfont: "Georgia"
+format: 
+  html: 
+    theme: cosmo
+    toc: true
     embed-resources: true
+  pdf:
+    colorlinks: true
+    includes:
+      in-header:
+    keep-tex: false
+header-includes:
+  \usepackage{tabularray}
+  \usepackage{siunitx}
+execute: 
+  echo: false
 ---
 
 ## Setup
@@ -15,6 +30,7 @@ library(stringr)
 library(modelsummary)
 library(tinyplot)
 library(readxl)
+library(here)
 
 tinytheme("ipsum",
           family = "Avenir Next Condensed",
@@ -238,7 +254,7 @@ $$
 
 In particular: what does the intercept represent *now*?
 
-The intercept is not the predicted life expectancy based on the average murder rate of the state. The slope is the same but instead needs to be interpreted as for every 1 unit increase in murders per 100,000 over the average murder rate, life expectancy decreases by 0.284 years.
+The intercept is now the predicted life expectancy based on the average murder rate of the state. The slope is the same but instead needs to be interpreted as for every 1 unit increase in murders per 100,000 over the average murder rate, life expectancy decreases by 0.284 years.
 
 ## 2b(iv). Plot and compare
 
@@ -364,7 +380,7 @@ predict(ma_std, newdata = C)
 Write a brief summary explaining what you learned about transforming a predictor:
 
 -   How do these transformations affect the estimated intercept and slope?
-    -   The do change the intercept and slope. The original model and the centered model have the same slope, but different intercepts. The centered model and the standardized model have the same intercept and different slopes. The original and standardized model have different intercepts and slopes.
+    -   They do change the intercept and slope. The original model and the centered model have the same slope, but different intercepts. The centered model and the standardized model have the same intercept and different slopes. The original and standardized model have different intercepts and slopes.
 -   Do they change predicted values (when transformed consistently)?
     -   The predicted values did not change when transformed consistently.
 -   Do they change overall goodness of fit (SSE, PRE, $F$)?
@@ -375,11 +391,141 @@ Write a brief summary explaining what you learned about transforming a predictor
 Do the same thing with an outcome and predictor of your choice from your own dataset. Use three transformations:
 
 -   original
+    -   $$
+        \widehat{\text{Abortion_Rate}} = 14.654 - 107.016 (\text{CPC_Rate})
+        $$
+    -   For every 1 unit increase in the CPCs per 1,000 females in a state, the abortion rate decreases by 107.016 abortions per 1,000 females in a state. In a state with no CPCs, the model predicts an abortion rate of 14.654 abortions per 1,000 females in a state.
 -   normalized X
+    -   $$
+        \widehat{\text{Abortion_Rate}} = 13.487 - 10.672 (\text{CPC_Rate})
+        $$
+    -   The predicted abortion rate for the state with the fewest CPCs per 1,000 females is 13.487 abortions per 1,000 females in a state.
 -   fully standardized
+    -   $$
+        \widehat{\text{Abortion_Rate}} = -0.440 (\text{CPC_Rate})
+        $$
+    -   In a state with one more standard deviation increase in the CPC rate would expect the abortion rate to decrease by 0.440 abortions per 1,000 females.
+-   The fit statistics (R2, F, PRE, and P) for all three models are the same.
+    -   R2 -\> 0.193
+    -   F -\> 10.780
+    -   PRE -\> 0.193
+    -   P -\> 0.002
 
 Interpret the intercepts and slopes for each of the three models. Compare the fit statistics for each of the three models.
 
 ```{r}
-my_data <- read_excel("my_file.xlsx")
+my_data <- read_excel(here("data", "cpc_abortion_rates.xlsx"))
+my_data$abortion_rate <- as.double(my_data$abortion_rate)
+
+my_data <- my_data |> drop_na()
+my_data
+
+cpc_summary <-
+  my_data |>
+  summarize(mean_abor   = mean(abortion_rate),
+            var_abor    = var(abortion_rate),
+            sd_abor     = sd(abortion_rate),
+            mean_cpc    = mean(cpc_rate),
+            var_cpc     = var(cpc_rate),
+            sd_cpc      = sd(cpc_rate))
+ cpc_summary
+ 
+mc_cpc <- lm(abortion_rate ~ 1, data = my_data)
+ma_cpc <- lm(abortion_rate ~ 1 + cpc_rate, data = my_data)
+
+sse_c_cpc <- deviance(mc_cpc)
+sse_a_cpc <- deviance(ma_cpc)
+
+df.residual(mc_cpc)
+df.residual(ma_cpc)
+
+pre_cpc <- (sse_c_cpc - sse_a_cpc)/sse_c_cpc
+
+PA_cpc <- 2
+PC_cpc <- 1
+
+n_cpc <- nrow(my_data)
+
+fstat_cpc <- (pre_cpc/(PA_cpc - PC_cpc)) / ((1 - pre_cpc)/(n_cpc - PA_cpc))
+fstat_cpc
+
+anova(mc_cpc, ma_cpc)
+
+p_cpc <- pf(fstat_cpc, 1, 45, lower.tail = FALSE)
+
+p_cpc
+
+msummary(list("MC" = mc_cpc, 
+              "MA" = ma_cpc),
+  shape = term ~ model,
+  gof_map = c("nobs", "r.squared"),
+  add_rows = data.frame(
+    term = c("F","p-value"),
+    MC = c("",""),
+    MA = c(fstat_cpc, p_cpc)))
+
+my_data <- my_data |> 
+  mutate(cpc_n = scales::rescale(cpc_rate))
+
+mc_cpc_n <- lm(abortion_rate ~ 1, data = my_data)
+ma_cpc_n <- lm(abortion_rate ~ 1 + cpc_n, data = my_data)
+
+sse_c_cpc_n <- deviance(mc_cpc_n)
+sse_a_cpc_n <- deviance(ma_cpc_n)
+
+df.residual(mc_cpc_n)
+df.residual(ma_cpc_n)
+
+pre_cpc_n <- (sse_c_cpc_n - sse_a_cpc_n)/sse_c_cpc_n
+
+fstat_cpc_n <- (pre_cpc_n/(PA_cpc - PC_cpc)) / ((1 - pre_cpc_n)/(n_cpc - PA_cpc))
+fstat_cpc_n
+
+anova(mc_cpc_n, ma_cpc_n)
+
+p_cpc_n <- pf(fstat_cpc_n, 1, 45, lower.tail = FALSE)
+
+p_cpc_n
+
+msummary(list("MC" = mc_cpc_n, 
+              "MA" = ma_cpc_n),
+  shape = term ~ model,
+  gof_map = c("nobs", "r.squared"),
+  add_rows = data.frame(
+    term = c("F","p-value"),
+    MC = c("",""),
+    MA = c(fstat_cpc_n, p_cpc_n)))
+
+my_data <- my_data |> 
+  mutate(cpc_std = (cpc_rate - mean(cpc_rate)) / sd(cpc_rate),
+         abortion_std = (abortion_rate - mean(abortion_rate)) / sd(abortion_rate))
+
+mc_cpc_std <- lm(abortion_std ~ 1, data = my_data)
+ma_cpc_std <- lm(abortion_std ~ 1 + cpc_std, data = my_data)
+
+sse_c_cpc_std <- deviance(mc_cpc_std)
+sse_a_cpc_std <- deviance(ma_cpc_std)
+
+df.residual(mc_cpc_std)
+df.residual(ma_cpc_std)
+
+pre_cpc_std <- (sse_c_cpc_std - sse_a_cpc_std)/sse_c_cpc_std
+
+fstat_cpc_std <- (pre_cpc_std/(PA_cpc - PC_cpc)) / ((1 - pre_cpc_std)/(n_cpc - PA_cpc))
+fstat_cpc_std
+
+anova(mc_cpc_std, ma_cpc_std)
+
+p_cpc_std <- pf(fstat_cpc_std, 1, 45, lower.tail = FALSE)
+
+p_cpc_std
+
+msummary(list("MC" = mc_cpc_std, 
+              "MA" = ma_cpc_std),
+  shape = term ~ model,
+  gof_map = c("nobs", "r.squared"),
+  add_rows = data.frame(
+    term = c("F","p-value"),
+    MC = c("",""),
+    MA = c(fstat_cpc_std, p_cpc_std)))
 ```
