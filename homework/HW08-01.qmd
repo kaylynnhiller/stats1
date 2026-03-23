@@ -1,6 +1,8 @@
 ---
 title: "Homework: Chapter 8 and Model Comparison"
 format: html
+author: "Kaylynn Hiller"
+date: "2026-03-23"
 ---
 
 ## Setup
@@ -96,7 +98,7 @@ ggplot(preds, aes(x = hs_grad, y = fit, color = income, fill = income)) +
 
 In an additive model, the prediction lines for different values of the other variable are always parallel. Explain in 2--3 sentences what the parallelism means substantively. What assumption is the additive model making about how `hs_grad` and `inc1000` jointly affect life expectancy?
 
-This parallelism means that this model assumes the the effect of high school graduation rate and per capita income are additive effects. The marginal effect of each of these outcomes on life expectancy does not depend on the other variable. This means that the amount that life expectancy increases by increasing graduation rate does not depend on the per capita income and vice versa.
+-   This parallelism means that this model assumes the the effect of high school graduation rate and per capita income are additive effects. The marginal effect of each of these outcomes on life expectancy does not depend on the other variable. This means that the amount that life expectancy increases by increasing graduation rate does not depend on the per capita income and vice versa.
 
 ## The Interaction Model
 
@@ -113,19 +115,54 @@ Display `m1` and `m2` side by side using `msummary()`.
 
 The interaction coefficient is negative. What does that mean? Describe the interaction from both directions: what does it say about the slope of `hs_grad` at different levels of income, and what does it say about the slope of `inc1000` at different levels of education?
 
--   
+-   A negative interaction coefficient means that as high school graduation rate increases, the effects of income on life expectancy decreases. This also means that as income increases, the effect of high school graduation rate on life expectancy also decreases.
 
 ## Visualizing the Interaction
 
 Make the interaction plot from the companion --- predicted `life_exp` against `hs_grad` at three representative values of `inc1000` (minimum, median, maximum). Use either tinyplot or ggplot2.
 
 ```{r}
+# three values of income
+myincs <- quantile(states$inc1000,
+                   c(0, .5, 1))
 
+# this will be the x-axis
+myhs <- seq(min(states$hs_grad),
+            max(states$hs_grad),
+            length = 100)
+
+# combine the values
+xgrid <- expand_grid(inc1000 = myincs,
+                     hs_grad = myhs)
+
+# get predictions and confidence bounds
+yhat <- predict(m2,
+                newdata = xgrid,
+                interval = "confidence",
+                level = .95)
+
+# stick everything together and label the lines
+preds <- bind_cols(yhat, xgrid) |>
+  mutate(income = case_match(inc1000,
+                             min(states$inc1000) ~ "min",
+                             max(states$inc1000) ~ "max",
+                             .default = "median"))
+
+ggplot(preds, aes(x = hs_grad, y = fit, color = income, fill = income)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, color = NA) +
+  geom_line(linewidth = 1) +
+  labs(
+    title = "Predicted life expectancy",
+    subtitle = "Interactive model, 95% CIs",
+    y = "Life expectancy",
+    x = "% of HS grad",
+    color = "income",
+    fill = "income")
 ```
 
 What's the key visual difference between this plot and the additive model plot? In the footnote to this plot, the companion hints that Alaska and Utah might be driving the interaction. What would you want to investigate if this were a real analysis?
 
--   
+-   The main difference is that rather than the slopes being the same, they are different. This means that at different income levels, the effect of graduation rate on life expectancy differs. We would want to investigate and examine Alaska and Utah to see if they are outliers.
 
 ## Comparing the Models
 
@@ -137,7 +174,7 @@ anova(m1, m2)
 
 What is the null hypothesis of this test? What do you conclude from the result?
 
--   
+-   The null hypothesis is that beta 3, the interaction coefficient, is zero. We would reject the null hypothesis based on the results of this anova.
 
 Now run the likelihood ratio test with `lmtest::lrtest(m1, m2)`. The p-value from the LRT is smaller than the one from the F-test. The companion explains why --- state that explanation in your own words.
 
@@ -145,7 +182,7 @@ Now run the likelihood ratio test with `lmtest::lrtest(m1, m2)`. The p-value fro
 lmtest::lrtest(m1, m2)
 ```
 
--   
+-   The likelihood test and ANOVA use different distributions to examine whether a statistic is surprising based on what would happen based on random chance. The likelihood test uses a chi squared distribution and ANOVA uses an F distribution. The tails of the chi squared distribution are thinner so the associated probability is smaller. This is because the F distribution is based on the degrees of freedom and the chi squared uses infinite degrees of freedom.
 
 ## Likelihood and Deviance
 
@@ -154,19 +191,26 @@ lmtest::lrtest(m1, m2)
 Using `logLik()`, extract the log-likelihoods of `m1` and `m2`. Compute their deviances ($D = -2\ell$) by hand.
 
 ```{r}
-
+dev_1 <- -2 * as.numeric(logLik(m1))
+dev_2 <- -2 * as.numeric(logLik(m2))
+dev_1
+dev_2
 ```
 
 The companion notes that `deviance()` on an `lm` object does *not* give you $-2\ell$ --- it gives you the RSS. Confirm this by comparing `deviance(m1)` to your hand-calculated $D$ for `m1`. Why are they different? What does each one measure?
 
 ```{r}
-
+rss_1 <- deviance(m1)
+rss_2 <- deviance(m2)
 ```
+
+-   The deviance function on an lm model returns the residual sum of squares. Using our previous method, we found the deviance.
 
 Compute the proportional reduction in deviance ($R^2$) for `m1` using both the RSS formula and the $\Delta D$ formula from the companion. Confirm they give the same answer.
 
 ```{r}
-
+1 - exp( -(dev_1 - dev_2 ) / nrow(states))
+(rss_1 - rss_2) / rss_1 
 ```
 
 ## AIC and BIC
@@ -179,10 +223,18 @@ Estimate a null model (`m0`), the additive model (`m1`), and the interaction mod
 #| eval: false
 m0 <- lm(life_exp ~ 1, data = states)
 
+AIC(m0, m1, m2)
+BIC(m0, m1, m2)
 ```
 
 Which model is preferred by AIC? Which by BIC? Are they the same?
 
+-   Both prefer m2.
+
 The companion explains that the AIC penalty of $2k$ corresponds to the expected increase in out-of-sample deviance per extra parameter. In your own words, what problem is the penalty term meant to solve? Why can't we just pick the model with the lowest deviance (i.e., the best in-sample fit)?
 
+-   We want to decrease deviance without over fitting the model and adding junk parameters. The goal of statistics is to build models to be able to interpret our data. The model with the lowest deviance would include all possible parameters, but would not meaningfully tell us anything.
+
 The BIC penalty is $k \log n$ instead of $2k$. For $n = 50$, compute $\log(50)$ and compare it to 2. What does this tell you about how the two criteria will differ in their preferences when $n$ is small vs. large?
+
+-   Log(50) is around 3.9. This is larger than 2. This suggests that for smaller sample sizes, BIC penalizes adding additional parameters more than in larger sample sizes.
